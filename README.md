@@ -20,6 +20,14 @@ This project implements an **end-to-end ETL pipeline** using **Databricks, PySpa
 
 The pipeline extracts daily MLB game data from a public API, processes it using the **Medallion Architecture**, and stores it in structured tables ready for analytics and visualization.
 
+## 🚀 Business Problem
+
+Sports analytics platforms need up-to-date MLB game data 
+to support dashboards, betting insights, and fan engagement.
+
+This pipeline automates daily ingestion and transformation 
+of MLB data into analytics-ready datasets.
+
 ---
 
 ## 🏗️ Medallion Architecture
@@ -31,6 +39,12 @@ The pipeline extracts daily MLB game data from a public API, processes it using 
 ```
 API → Bronze → Silver → Gold → BI Tools
 ```
+
+API → Bronze → Silver → Gold → Power BI
+        ↓
+     Delta Lake
+        ↓
+     Workflow (Scheduler)
 
 ### 🔹 Bronze Layer
 
