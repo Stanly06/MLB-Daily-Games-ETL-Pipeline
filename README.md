@@ -1,5 +1,5 @@
 # MLB Daily Games ETL Pipeline
-Production-style ETL pipeline built with Databricks, featuring API ingestion, Delta Lake MERGE, Medallion Architecture, and automated daily execution.
+Production style ETL pipeline built with Databricks, featuring API ingestion, Delta Lake MERGE, Medallion Architecture, and automated daily execution.
 
 # ⚾ MLB Daily ETL Pipeline using Databricks
 
