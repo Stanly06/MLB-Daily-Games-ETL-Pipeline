@@ -85,18 +85,17 @@ API → Bronze → Silver → Gold → BI Tools
 ## 🎥 Project Demo
 
 📹 Video Explanation:
-👉 [INSERT YOUR VIDEO LINK HERE]
+👉 https://youtu.be/oDlRG3iUFq8
 
 ---
 
 ## 📂 Databricks Implementation
 
-🔗 Databricks Workspace (optional):
-👉 [INSERT DATABRICKS LINK HERE]
+🔗 Databricks Workspace:
+👉 https://dbc-05963ad7-c763.cloud.databricks.com/browse/folders/964238745135580?o=7474655078902957
 
 > Note: Access may be restricted. Code is fully replicated in this repository.
 
----
 
 ## 📸 Screenshots
 
