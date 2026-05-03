@@ -52,11 +52,6 @@ API → Bronze → Silver → Gold → BI Tools
 
 ---
 
-## 🖼️ Architecture Diagram
-
-![Architecture](images/architecture.png)
-
----
 
 ## ⚙️ Technologies Used
 
