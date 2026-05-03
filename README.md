@@ -104,15 +104,6 @@ API → Bronze → Silver → Gold → BI Tools
 
 > Note: Access may be restricted. Code is fully replicated in this repository.
 
-
-## 📸 Screenshots
-
-### Workflow
-
-![Workflow](images/workflow.png)
-
----
-
 ## 💼 Business Value
 
 This pipeline simulates a real-world data engineering solution by:
