@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="thumbnail.png" width="900"/>
+</p>
+
 # MLB Daily Games ETL Pipeline
 Production style ETL pipeline built with Databricks, featuring API ingestion, Delta Lake MERGE, Medallion Architecture, and automated daily execution.
 
