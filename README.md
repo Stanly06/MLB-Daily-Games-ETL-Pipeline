@@ -18,7 +18,11 @@ The pipeline extracts daily MLB game data from a public API, processes it using 
 
 ---
 
-## 🧱 Architecture (Medallion)
+## 🏗️ Medallion Architecture
+
+<p align="center">
+  <img src="medallion_architecture.png" width="700"/>
+</p>
 
 ```
 API → Bronze → Silver → Gold → BI Tools
@@ -64,7 +68,11 @@ API → Bronze → Silver → Gold → BI Tools
 
 ---
 
-## 🔄 Pipeline Flow
+## ⚙️ Workflow Automation
+
+<p align="center">
+  <img src="WorkFlow.png" width="700"/>
+</p>
 
 1. Extract data from MLB API
 2. Store raw data in Bronze
