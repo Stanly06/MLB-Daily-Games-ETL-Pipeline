@@ -1,144 +1,85 @@
 <p align="center">
-  <img src="thumbnail.png" width="900"/>
+  <img src="thumbnail.png" width="900" alt="MLB Daily Games ETL Pipeline on Databricks"/>
 </p>
 
 # MLB Daily Games ETL Pipeline
-Production style ETL pipeline built with Databricks, featuring API ingestion, Delta Lake MERGE, Medallion Architecture, and automated daily execution.
 
-# ⚾ MLB Daily ETL Pipeline using Databricks
+An automated, end-to-end ETL pipeline on **Databricks** that ingests yesterday's MLB games from the public **MLB Stats API**, processes them through a **Bronze → Silver → Gold** Medallion Architecture on **Delta Lake**, and runs every night as a scheduled **Databricks Job**.
 
-## 👤 Author
+**Stack:** Python · PySpark · Spark SQL · Delta Lake (MERGE) · Databricks Jobs · REST API
 
-**Stanly Fernández**
-Industrial Engineer | Data Analyst | Aspiring Data Engineer
+▶️ **Video walkthrough:** https://youtu.be/oDlRG3iUFq8
 
 ---
 
-## 🚀 Project Overview
+## Business problem
 
-This project implements an **end-to-end ETL pipeline** using **Databricks, PySpark, and Delta Lake**.
+Sports dashboards need fresh, reliable game results every morning. Pulling them by hand is slow and error-prone. This pipeline automates the daily load and delivers clean, analytics-ready tables plus an execution log to monitor every run.
 
-The pipeline extracts daily MLB game data from a public API, processes it using the **Medallion Architecture**, and stores it in structured tables ready for analytics and visualization.
-
-## 🚀 Business Problem
-
-Sports analytics platforms need up-to-date MLB game data 
-to support dashboards, betting insights, and fan engagement.
-
-This pipeline automates daily ingestion and transformation 
-of MLB data into analytics-ready datasets.
-
----
-
-## 🏗️ Medallion Architecture
+## Architecture
 
 <p align="center">
-  <img src="medallion_architecture.png" width="700"/>
+  <img src="medallion_architecture.png" width="700" alt="Medallion architecture"/>
 </p>
 
+```mermaid
+flowchart LR
+    A[MLB Stats API<br/>/api/v1/schedule] -->|raw JSON| B[(Bronze<br/>bronze_mlb_schedule_raw)]
+    B -->|parse + MERGE on game_pk| C[(Silver<br/>silver_mlb_games)]
+    C -->|aggregate + MERGE on game_date| D[(Gold<br/>gold_mlb_daily_summary)]
+    B & C & D -.->|status, rows, duration| L[(pipeline_logs)]
 ```
-API → Bronze → Silver → Gold → BI Tools
-```
 
-API → Bronze → Silver → Gold → Power BI
-        ↓
-     Delta Lake
-        ↓
-     Workflow (Scheduler)
+| Layer | Table | What it holds |
+|---|---|---|
+| Bronze | `mlb_project.bronze_mlb_schedule_raw` | The raw API response stored as JSON, with request URL, HTTP status, extraction time and run ID. Append-only for traceability. |
+| Silver | `mlb_project.silver_mlb_games` | One row per game: date, season, game type, status, home/away teams and scores, venue, inning state and `is_final` flag. Upserted with `MERGE` on `game_pk`, so re-runs do not create duplicates. |
+| Gold | `mlb_project.gold_mlb_daily_summary` | Daily KPIs: total games, final vs. non-final games, total runs, average runs per game and teams playing. Upserted with `MERGE` on `game_date`. |
+| Logs | `mlb_project.pipeline_logs` | One record per layer and run: status (SUCCESS/FAILED), message, records processed, start/end time and duration in seconds. |
 
-### 🔹 Bronze Layer
+## How it works
 
-* Raw JSON data ingestion from API
-* Stored without transformation
-* Ensures traceability
+1. **Setup** (`01_setup_tables.ipynb`) creates the `mlb_project` database, the three layer tables and the log table.
+2. **Bronze** (`02_bronze_mlb_api_extract.ipynb`) calls `statsapi.mlb.com/api/v1/schedule` for the previous day (time zone `America/Santo_Domingo`), validates the HTTP status and appends the raw JSON.
+3. **Silver** (`03_silver_mlb_games_transform.ipynb`) reads the latest Bronze record for the date, flattens the nested JSON into a typed schema and merges it into Silver.
+4. **Gold** (`04_gold_mlb_daily_summary.ipynb`) checks that Silver has data for the date, aggregates the daily metrics and merges them into Gold.
+5. **Validation** (`05_validation_queries.ipynb`) contains SQL checks for each layer, the run logs and row counts per layer.
 
-### 🔹 Silver Layer
+Every step writes to `pipeline_logs`, and failures are logged with the full error before the task stops.
 
-* Data cleaning and transformation
-* Structured schema (teams, scores, status)
-* Delta Lake MERGE (upsert logic)
-
-### 🔹 Gold Layer
-
-* Aggregated metrics
-* Business-ready data
-* Used for dashboards
-
----
-
-
-## ⚙️ Technologies Used
-
-| Tool          | Description               |
-| ------------- | ------------------------- |
-| 🧠 Databricks | Data platform             |
-| 🐍 Python     | Data ingestion            |
-| 🔥 PySpark    | Data processing           |
-| 🟦 SQL        | Queries & transformations |
-| 🧊 Delta Lake | Storage & MERGE           |
-| 🌐 REST API   | Data source               |
-| 📊 Power BI   | Visualization (planned)   |
-
----
-
-## ⚙️ Workflow Automation
+## Automation
 
 <p align="center">
-  <img src="WorkFlow.png" width="700"/>
+  <img src="WorkFlow.png" width="800" alt="Databricks Job with four dependent tasks"/>
 </p>
 
-1. Extract data from MLB API
-2. Store raw data in Bronze
-3. Transform data in Silver
-4. Aggregate metrics in Gold
-5. Automate execution via workflow
+The four notebooks run as dependent tasks in a **Databricks Job** scheduled daily at **12:00 AM (America/Santo_Domingo)**, so each layer only runs after the previous one succeeds.
+
+## Repository structure
+
+```
+├── 01_setup_tables.ipynb
+├── 02_bronze_mlb_api_extract.ipynb
+├── 03_silver_mlb_games_transform.ipynb
+├── 04_gold_mlb_daily_summary.ipynb
+├── 05_validation_queries.ipynb
+├── medallion_architecture.png
+├── WorkFlow.png
+└── thumbnail.png
+```
+
+## Run it yourself
+
+1. Import the notebooks into a Databricks workspace (Free Edition works).
+2. Run `01_setup_tables` once.
+3. Run notebooks 02 → 04 in order, or create a Job with these tasks and dependencies.
+4. Use `05_validation_queries` to check each layer and the logs.
+
+## Next steps
+
+- Power BI report on top of the Gold table.
+- Expectations / data-quality rules on the Silver layer.
 
 ---
 
-## ⏱️ Automation
-
-* Pipeline scheduled to run **daily at midnight**
-* Implemented using **Databricks Workflows**
-* Includes logging and monitoring
-
----
-
-## 🎥 Project Demo
-
-📹 Video Explanation:
-👉 https://youtu.be/oDlRG3iUFq8
-
----
-
-## 📂 Databricks Implementation
-
-🔗 Databricks Workspace:
-👉 https://dbc-05963ad7-c763.cloud.databricks.com/browse/folders/964238745135580?o=7474655078902957
-
-> Note: Access may be restricted. Code is fully replicated in this repository.
-
-## 💼 Business Value
-
-This pipeline simulates a real-world data engineering solution by:
-
-* Automating data ingestion
-* Ensuring data quality
-* Providing structured datasets for analytics
-* Supporting data-driven decision making
-
----
-
-## 📬 Contact
-
-📧 Email: [sffernandez06@gmail.com](mailto:sffernandez06@gmail.com)
-📱 Phone: +1 (809) 514-1912
-🔗 LinkedIn: http://linkedin.com/in/stanly-fernandez
-💻 GitHub: https://github.com/Stanly06
-
----
-
-## ⭐ Final Note
-
-This project demonstrates my ability to design and implement scalable data pipelines using modern data engineering tools.
-
-I am currently open to opportunities in **Data Analytics and Data Engineering**.
+**Stanly Fernández** · [LinkedIn](https://www.linkedin.com/in/stanly-fernandez/) · [Portfolio](https://stanly06.github.io/) · [GitHub](https://github.com/Stanly06)
