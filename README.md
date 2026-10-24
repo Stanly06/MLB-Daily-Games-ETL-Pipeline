@@ -38,7 +38,7 @@ Full requirements: [Business Requirements Document](docs/01_Business_Requirement
 | **Head-to-head** | Season and all-time record between two teams, every meeting with score and winning pitcher | `head_to_head`, `fact_game` |
 | **Players** | AVG/OBP/SLG/OPS, ISO, BABIP, K%, BB%; ERA, WHIP, K/9, **FIP**, quality starts; league ranks among qualified players | `player_season_batting`, `player_season_pitching` |
 | **Form** | Rolling last-15-games OPS and last-5-appearances ERA vs season-to-date | `batting_game_log`, `pitching_game_log` |
-| **Dominicans in MLB** | Players by birth country, share of league home runs and strikeouts, top Dominican hitters/pitchers, last night's lines | `country_season_summary`, `dominican_*` |
+| **Players by country** | Players by birth country (all countries, Dominicans in focus), share of league home runs and strikeouts, top hitters/pitchers per country, last night's lines | `country_season_summary`, `latest_game_day_lines`, `dominican_*` |
 | **League & operations** | Games, runs, home runs, attendance, duration per day; run log and data-quality results | `league_daily_summary`, `metadata.*`, `quality.dq_results` |
 
 ## Architecture
@@ -134,7 +134,7 @@ python tests/local_run.py --backfill 2025                      # a full season
 ## Dashboard
 
 - **Power BI**: model, relationships, 7 report pages and DAX measures in [`powerbi/`](powerbi/README.md).
-- **Web platform**: [`web/`](web/) builds a single-page explorer (league, team, player, head-to-head, leaders, Dominicans, data quality; Spanish/English) from the Gold export.
+- **Web platform**: [`web/`](web/) builds a single-page explorer from the Gold export (Spanish/English): league, team pages with logos, player profiles with photo, current team and full season stats, head-to-head, leaders, players by country (any nationality) and data quality. Logos and headshots load from MLB's public image CDN; where a host blocks external images the page shows the team abbreviation or the player's initials instead.
 
 ## Repository structure
 

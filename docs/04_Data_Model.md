@@ -75,6 +75,7 @@ erDiagram
 | `player_season_pitching` | player × season × season type | KPIs PIT-001…010 |
 | `batting_game_log`, `pitching_game_log` | player × game | KPIs FORM-001…003 |
 | `country_season_summary` | country × season × season type | KPIs DR-001…004 |
+| `latest_game_day_lines` | view | every player's line on the latest game day, with birth country (DR-007) |
 | `dominican_batting_season`, `dominican_pitching_season`, `dominican_latest_games` | views | KPIs DR-005, DR-006 |
 | `dim_date`, `dim_team`, `dim_player`, `dim_venue`, `fact_*` | serving views / table | star schema for Power BI |
 | `league_daily_summary` | date × season type | KPIs LG-001…004 |

@@ -78,7 +78,7 @@ Innings are stored as **outs** (exact integers) and converted: IP = outs / 3; di
 
 Hot / cold signal in Power BI: `ops_last_15 − ops_season_to_date`.
 
-## 6. Dominican players KPIs — `gold.country_season_summary` and `gold.dominican_*` views
+## 6. Players by country (Dominicans in focus) — `gold.country_season_summary`, `gold.latest_game_day_lines`, `gold.dominican_*` views
 
 | ID | KPI | Definition | Object |
 |---|---|---|---|
@@ -88,6 +88,7 @@ Hot / cold signal in Power BI: `ops_last_15 − ops_season_to_date`.
 | DR-004 | Country ranking | Rank of each country by number of players | `country_rank_by_players` |
 | DR-005 | Top Dominicans | Dominican hitters / pitchers ranked by OPS, HR, SO, SV with their league rank | `dominican_batting_season`, `dominican_pitching_season` |
 | DR-006 | Latest game day | Line of every Dominican player on the most recent game day | `dominican_latest_games` |
+| DR-007 | Any country | DR-001…006 for any birth country (country explorer in the web platform) | `country_season_summary`, `latest_game_day_lines` |
 
 ## 7. League and operations KPIs — `gold.league_daily_summary`, `metadata`, `quality`
 
@@ -108,5 +109,5 @@ Hot / cold signal in Power BI: `ops_last_15 − ops_season_to_date`.
 | Team | TEAM-001…013 | `team_season_summary`, `team_game_log` |
 | Player | BAT-*, PIT-*, FORM-* | `player_season_batting`, `player_season_pitching`, game logs |
 | Head-to-head | H2H-001…004 | `head_to_head`, `fact_game` |
-| Dominicans in MLB | DR-001…006 | `country_season_summary`, `dominican_*` |
+| Countries (Dominicans in MLB by default) | DR-001…007 | `country_season_summary`, `latest_game_day_lines`, `dominican_*` |
 | Data health | OPS-001, OPS-002 | `metadata.pipeline_runs`, `quality.dq_results` |

@@ -79,10 +79,23 @@ tr.click { cursor: pointer; }
 .results { display: flex; flex-wrap: wrap; gap: 6px; }
 .results button { border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: var(--r); padding: 4px 9px; font-size: 13px; }
 .results button:hover { border-color: var(--accent); }
+.results button span { color: var(--muted); font-family: var(--f-data); font-size: 11px; margin-left: 4px; }
+.logo { position: relative; display: inline-grid; place-items: center; width: var(--s); height: var(--s); flex: none; border-radius: 50%; background: var(--surface-2); border: 1px solid var(--line); overflow: hidden; vertical-align: middle; }
+.logo b { font-family: var(--f-display); font-size: calc(var(--s) * .34); font-weight: 700; color: var(--accent); letter-spacing: .02em; }
+.logo img { position: absolute; inset: 14%; width: 72%; height: 72%; object-fit: contain; }
+.shot { position: relative; display: grid; place-items: center; width: 132px; max-width: 100%; aspect-ratio: 213 / 320; flex: none; border-radius: var(--r); background: var(--surface-2); border: 1px solid var(--line); overflow: hidden; }
+.shot b { font-family: var(--f-display); font-size: 44px; font-weight: 700; color: var(--muted); }
+.shot img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.hero { display: flex; flex-wrap: wrap; gap: 16px 20px; align-items: center; }
+.hero .meta { display: grid; gap: 8px; min-width: 0; flex: 1 1 260px; }
+.hero .pick { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.team-line { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.kv { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 13px; color: var(--muted); }
+.kv b { color: var(--ink); font-weight: 600; }
 .note { font-size: 12px; color: var(--muted); }
 .empty { color: var(--muted); padding: 18px 0; }
 footer { color: var(--muted); font-size: 12px; padding-block: 0 32px; }
-@media (max-width: 560px) { .profile .nm { font-size: 30px; } h2 { font-size: 24px; } .stat .v { font-size: 26px; } }
+@media (max-width: 560px) { .shot { width: 104px; } .profile .nm { font-size: 30px; } h2 { font-size: 24px; } .stat .v { font-size: 26px; } }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
 </style>
 
@@ -108,7 +121,7 @@ const RAW = JSON.parse(document.getElementById("mlb-data").textContent);
 // ---------- i18n ----------
 const I = {
   es: { season:"Temporada", type:"Tipo", "Regular Season":"Temporada regular", Postseason:"Postemporada",
-    league:"Liga", team:"Equipo", player:"Jugador", h2h:"Enfrentamientos", leaders:"Líderes", dr:"Dominicanos", quality:"Calidad",
+    league:"Liga", team:"Equipo", player:"Jugador", h2h:"Enfrentamientos", leaders:"Líderes", dr:"Países", quality:"Calidad",
     asof:"Datos hasta", games:"Juegos", avgRuns:"Carreras por juego", hr:"Jonrones", att:"Asistencia promedio",
     makeups:"Juegos reprogramados", standings:"Posiciones", luck:"Suerte: victorias reales − esperadas",
     luckLede:"Victorias por encima (verde) o por debajo (rojo) de lo que predice su diferencial de carreras (expectativa pitagórica).",
@@ -121,6 +134,10 @@ const I = {
     gameLog:"Registro de juegos", career:"Temporadas", born:"Nació en", bats:"Batea", throws:"Lanza", age:"Edad",
     vs:"vs", meetings:"Juegos entre ambos", allSeasons:"Todas las temporadas", thisSeason:"Esta temporada", date:"Fecha", score:"Marcador", venue:"Estadio", wp:"Ganador",
     noMeet:"No se enfrentaron en esta selección.", qualified:"calificados", minPA:"mín.", drLede:"Peloteros nacidos en República Dominicana: cuántos son, qué parte de la producción de la liga aportan y cómo les fue en la última jornada.",
+    country:"País", allCountries:"Todos los países", ctryLede:"Peloteros nacidos en {c}: cuántos son, qué parte de la producción de la liga aportan, quiénes destacan y cómo les fue en la última jornada. Elige cualquier país.",
+    ctryPlayers:"Peloteros", hitters:"Bateadores", pitchers:"Lanzadores", noLatest:"Ningún pelotero de este país jugó en la última jornada.",
+    currentTeam:"Equipo actual", seasonTeam:"Equipo en", position:"Posición", height:"Estatura", weight:"Peso", debut:"Debut en MLB",
+    fullStats:"Estadísticas completas", batting:"Bateo", pitching:"Pitcheo", playedFor:"Jugó para {n} equipos", clickHint:"Toca una fila para ver el detalle.",
     drPlayers:"Peloteros dominicanos", pctPlayers:"% de los jugadores", pctHR:"% de los jonrones", pctSO:"% de los ponches", byCountry:"Jugadores por país de nacimiento",
     drHit:"Bateadores dominicanos", drPit:"Lanzadores dominicanos", latest:"Última jornada", line:"Línea", qLede:"Controles de calidad de la última ejecución del pipeline, incluida la reconciliación con los standings oficiales de MLB.",
     check:"Control", sev:"Severidad", status:"Estado", failed:"Fallidos", checked:"Revisados", rankCountry:"Lugar por cantidad de jugadores",
@@ -128,7 +145,7 @@ const I = {
     h2hLede:"Récord directo entre dos equipos y cada juego en que se enfrentaron.", leadersLede:"Líderes de la liga. Promedios y efectividad entre jugadores calificados.",
     foot:"Fuente: MLB Stats API (© MLB Advanced Media), procesada en Databricks (Bronze → Silver → Gold). Proyecto de portafolio de Stanly Fernández, sin fines comerciales." },
   en: { season:"Season", type:"Type", "Regular Season":"Regular season", Postseason:"Postseason",
-    league:"League", team:"Team", player:"Player", h2h:"Head-to-head", leaders:"Leaders", dr:"Dominicans", quality:"Quality",
+    league:"League", team:"Team", player:"Player", h2h:"Head-to-head", leaders:"Leaders", dr:"Countries", quality:"Quality",
     asof:"Data through", games:"Games", avgRuns:"Runs per game", hr:"Home runs", att:"Avg attendance",
     makeups:"Make-up games", standings:"Standings", luck:"Luck: actual − expected wins",
     luckLede:"Wins above (green) or below (red) what the run differential predicts (Pythagorean expectation).",
@@ -141,6 +158,10 @@ const I = {
     gameLog:"Game log", career:"Seasons", born:"Born in", bats:"Bats", throws:"Throws", age:"Age",
     vs:"vs", meetings:"Meetings", allSeasons:"All seasons", thisSeason:"This season", date:"Date", score:"Score", venue:"Venue", wp:"Winner",
     noMeet:"They did not meet in this selection.", qualified:"qualified", minPA:"min.", drLede:"Players born in the Dominican Republic: how many, what share of league production they deliver, and how they did on the latest game day.",
+    country:"Country", allCountries:"All countries", ctryLede:"Players born in {c}: how many, what share of league production they deliver, who stands out and how they did on the latest game day. Pick any country.",
+    ctryPlayers:"Players", hitters:"Hitters", pitchers:"Pitchers", noLatest:"No player from this country played on the latest game day.",
+    currentTeam:"Current team", seasonTeam:"Team in", position:"Position", height:"Height", weight:"Weight", debut:"MLB debut",
+    fullStats:"Full stats", batting:"Batting", pitching:"Pitching", playedFor:"Played for {n} teams", clickHint:"Tap a row for details.",
     drPlayers:"Dominican players", pctPlayers:"% of players", pctHR:"% of home runs", pctSO:"% of strikeouts", byCountry:"Players by birth country",
     drHit:"Dominican hitters", drPit:"Dominican pitchers", latest:"Latest game day", line:"Line", qLede:"Data-quality checks from the latest pipeline run, including reconciliation with official MLB standings.",
     check:"Check", sev:"Severity", status:"Status", failed:"Failed", checked:"Checked", rankCountry:"Rank by number of players",
@@ -169,11 +190,36 @@ const cls = v => v > 0 ? "pos" : v < 0 ? "neg" : "";
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
 
+// Official MLB images (team logos, player headshots). Where a host blocks external images the
+// badge with the team abbreviation or the player's initials stays visible instead.
+const IMG = {
+  logo: id => `https://www.mlbstatic.com/team-logos/${id}.svg`,
+  headshot: id => `https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/${id}/headshot/67/current`,
+};
+const initials = n => String(n || "").split(/\s+/).map(w => w[0]).filter(Boolean).slice(0, 2).join("");
+const logo = (id, size = 44) => id ? `<span class="logo" style="--s:${size}px"><b>${esc(abbr(id))}</b><img data-img src="${IMG.logo(id)}" alt="${esc((TEAMS.get(id) || {}).team_name || "")}" loading="lazy"></span>` : "";
+const shot = (pid, name) => `<span class="shot"><b>${esc(initials(name))}</b><img data-img src="${IMG.headshot(pid)}" alt="${esc(name)}" loading="lazy"></span>`;
+function wireImages() {
+  document.querySelectorAll("#view img[data-img]").forEach(img => {
+    const drop = () => img.remove();
+    img.addEventListener("error", drop, { once: true });
+    if (img.complete && img.naturalWidth === 0 && img.currentSrc) drop();
+  });
+}
+const CTRY_ES = { "Dominican Republic": "República Dominicana", USA: "Estados Unidos", Mexico: "México", Japan: "Japón", Canada: "Canadá",
+  Panama: "Panamá", "Republic of Korea": "Corea del Sur", Curacao: "Curazao", Netherlands: "Países Bajos", Brazil: "Brasil",
+  Germany: "Alemania", "United Kingdom": "Reino Unido", Bahamas: "Bahamas", Taiwan: "Taiwán", Peru: "Perú", Spain: "España",
+  "South Africa": "Sudáfrica", Italy: "Italia", France: "Francia", Belgium: "Bélgica", Lithuania: "Lituania", Russia: "Rusia",
+  "Virgin Islands": "Islas Vírgenes", "U.S. Virgin Islands": "Islas Vírgenes", Honduras: "Honduras", Unknown: "Desconocido" };
+const cname = c => lang === "es" ? (CTRY_ES[c] || c) : c;
+const fmtHeight = h => h ? `${Math.floor(h / 12)}' ${h % 12}"` : "—";
+
 // ---------- state ----------
 const seasons = RAW.meta.seasons.slice().sort((a, b) => b - a);
-const S = { season: seasons[0], type: "Regular Season", team: null, team2: null, player: null, q: "" };
+const S = { season: seasons[0], type: "Regular Season", team: null, team2: null, player: null, q: "", country: "Dominican Republic" };
 const TABS = ["league", "team", "player", "h2h", "leaders", "dr", "quality"];
-let tab = TABS.includes(location.hash.slice(1)) ? location.hash.slice(1) : "league";
+const hashTab = location.hash.slice(1) === "countries" ? "dr" : location.hash.slice(1);
+let tab = TABS.includes(hashTab) ? hashTab : "league";
 const charts = [];
 const killCharts = () => { while (charts.length) charts.pop().destroy(); };
 
@@ -248,8 +294,10 @@ function viewTeam() {
   const bat = tbl("batting").filter(b => b.season === S.season && b.season_type === S.type && b.team_id === S.team && b.pa >= (S.type === "Regular Season" ? 150 : 10)).sort((a, b) => b.ops - a.ops).slice(0, 8);
   const pit = tbl("pitching").filter(p => p.season === S.season && p.season_type === S.type && p.team_id === S.team && p.outs >= (S.type === "Regular Season" ? 120 : 9)).sort((a, b) => a.era - b.era).slice(0, 8);
   view(`
-    <section class="row"><h2>${esc((TEAMS.get(S.team) || {}).team_name)} · ${S.season}</h2>
-      <label for="f-team" class="note">${t("team")}</label><select id="f-team">${opts}</select></section>
+    <section class="hero">${logo(S.team, 76)}
+      <div class="meta"><h2>${esc((TEAMS.get(S.team) || {}).team_name)} · ${S.season}</h2>
+        <span class="note">${esc((TEAMS.get(S.team) || {}).league_abbreviation || "")} · ${esc((TEAMS.get(S.team) || {}).division_name || "")} · ${t(S.type)}</span></div>
+      <div class="pick"><label for="f-team" class="note">${t("team")}</label><select id="f-team">${opts}</select></div></section>
     <p class="lede">${t("teamLede")}</p>
     ${r ? `<div class="stats">${stat(t("record"), `${r.wins}-${r.losses}`, f3(r.win_pct))}${stat(t("rd"), sgn(r.run_differential), `${f2(r.runs_scored_per_game)} RS/G · ${f2(r.runs_allowed_per_game)} RA/G`, cls(r.run_differential))}${stat(t("expW"), f1(r.expected_wins), `${sgn(r.luck_wins)} vs real`, cls(r.luck_wins))}${stat(t("streak"), esc(r.current_streak), `${t("last10")}: ${r.last_10_wins}-${r.last_10_losses}`)}${stat(t("home"), `${r.home_wins}-${r.home_losses}`, `${t("away")}: ${r.away_wins}-${r.away_losses}`)}${stat(t("oneRun"), `${r.one_run_wins}-${r.one_run_losses}`, `${t("extra")}: ${r.extra_inning_wins}-${r.extra_inning_losses}`)}</div>` : `<p class="empty">${t("noLine")}</p>`}
     ${log.length ? `<div class="panel"><h3>${t("trajectory")}</h3><div class="chart"><canvas id="c-traj"></canvas></div></div>` : ""}
@@ -282,11 +330,21 @@ function viewPlayer() {
     <section><h3>${t("player")}</h3>
       <div class="row"><input type="search" id="f-q" placeholder="${t("search")}" value="${esc(S.q)}" autocomplete="off" aria-label="${t("search")}"></div>
       <div class="results" id="q-res" style="margin-top:8px"></div></section>
-    <section class="panel"><div class="profile"><span class="nm">${esc(p.player_name)}</span><span class="chip">${esc(team)}</span><span class="chip">${esc(p.primary_position || "")}</span>
-      <span class="note">${t("born")} ${esc(p.birth_country || "—")} · ${t("bats")} ${esc(p.bats || "—")} · ${t("throws")} ${esc(p.throws || "—")}${any && any.age ? ` · ${t("age")} ${any.age}` : ""}</span></div>
-      <p class="lede">${t("playerLede")}</p></section>
+    <section class="panel hero">${shot(S.player, p.player_name)}
+      <div class="meta">
+        <div class="profile"><span class="nm">${esc(p.player_name)}</span><span class="chip">${esc(p.primary_position || "")}</span></div>
+        ${p.current_team_id ? `<div class="team-line">${logo(p.current_team_id, 40)}<span><span class="note">${t("currentTeam")}</span><br><b>${esc((TEAMS.get(p.current_team_id) || {}).team_name || "")}</b></span></div>` : ""}
+        <div class="kv"><span>${t("position")}: <b>${esc(p.primary_position_name || p.primary_position || "—")}</b></span>
+          <span>${t("bats")}/${t("throws")}: <b>${esc(p.bats || "—")}/${esc(p.throws || "—")}</b></span>
+          ${any && any.age ? `<span>${t("age")} (${S.season}): <b>${any.age}</b></span>` : ""}
+          <span>${t("height")}: <b>${fmtHeight(p.height_in)}</b></span><span>${t("weight")}: <b>${p.weight_lb ? p.weight_lb + " lb" : "—"}</b></span>
+          <span>${t("born")}: <b>${esc([p.birth_city, cname(p.birth_country)].filter(Boolean).join(", ") || "—")}</b></span>
+          <span>${t("debut")}: <b>${esc(p.mlb_debut_date || "—")}</b></span></div>
+        ${any ? `<div class="kv"><span>${t("seasonTeam")} ${S.season} (${t(S.type)}): <b>${esc(team)}</b></span>${any.teams_played > 1 ? `<span>${t("playedFor").replace("{n}", any.teams_played)}</span>` : ""}</div>` : ""}
+      </div></section>
     ${b && !isPitcher ? batBlock(b) : ""}${q ? pitBlock(q) : ""}${b && isPitcher ? batBlock(b) : ""}
     ${!b && !q ? `<p class="empty">${t("noLine")}</p>` : ""}
+    ${b || q ? `<div class="panel"><h3>${t("fullStats")} · ${S.season} · ${t(S.type)}</h3>${b ? fullBat(b) : ""}${q ? fullPit(q) : ""}</div>` : ""}
     ${blog.length && !isPitcher ? `<div class="panel"><h3>${t("form")} · ${S.season}</h3><div class="chart"><canvas id="c-form"></canvas></div></div>` : ""}
     ${plog.length && isPitcher ? `<div class="panel"><h3>${t("form5")} · ${S.season}</h3><div class="chart"><canvas id="c-form"></canvas></div></div>` : ""}
     <div class="grid wide">
@@ -303,7 +361,7 @@ function viewPlayer() {
     if (qq.length < 2) { box.innerHTML = `<span class="note">${t("searchHint")}</span>`; return; }
     const norm = s => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
     const hits = tbl("players").filter(x => norm(x.player_name).includes(norm(qq))).slice(0, 14);
-    box.innerHTML = hits.map(x => `<button type="button" data-p="${x.player_id}">${esc(x.player_name)}</button>`).join("") || `<span class="note">0</span>`;
+    box.innerHTML = hits.map(x => `<button type="button" data-p="${x.player_id}">${esc(x.player_name)}${x.current_team_id ? `<span>${esc(abbr(x.current_team_id))}</span>` : ""}</button>`).join("") || `<span class="note">0</span>`;
     box.querySelectorAll("button").forEach(btn => btn.onclick = () => { S.player = Number(btn.dataset.p); S.q = ""; render(); });
   };
   input.oninput = showRes; showRes();
@@ -317,8 +375,18 @@ function viewPlayer() {
       { label: "ERA " + t("season").toLowerCase(), data: plog.map(g => g.era_season_to_date), borderColor: gold, backgroundColor: gold, pointRadius: 0, borderWidth: 1.5, borderDash: [4, 3] }] },
     options: { interaction: { mode: "index", intersect: false }, scales: { x: { ticks: { maxTicksLimit: 10 } }, y: { suggestedMin: 0 } } } });
 }
-const batBlock = b => `<div class="stats">${stat("AVG", f3(b.avg), `${b.h} H · ${b.pa} PA`)}${stat("OBP", f3(b.obp))}${stat("SLG", f3(b.slg))}${stat("OPS", f3(b.ops), b.ops_rank_qualified ? `#${b.ops_rank_qualified} MLB (${t("qualified")})` : "")}${stat("HR", b.hr, `#${b.hr_rank} MLB`)}${stat("RBI", b.rbi)}${stat("SB", b.sb)}${stat("K% / BB%", `${f1(b.k_pct)}`, `BB ${f1(b.bb_pct)}%`)}</div>`;
-const pitBlock = q => `<div class="stats">${stat("ERA", f2(q.era), q.era_rank_qualified ? `#${q.era_rank_qualified} MLB` : `${q.ip_display} IP`)}${stat("WHIP", f2(q.whip))}${stat("FIP", f2(q.fip))}${stat("SO", q.so, `#${q.so_rank} MLB`)}${stat("K/9", f2(q.k_per_9), `BB/9 ${f2(q.bb_per_9)}`)}${stat("W-L", `${q.w}-${q.l}`, `SV ${q.sv} · HLD ${q.hld}`)}${stat("IP", q.ip_display, `${q.games} G · ${q.games_started} GS`)}${stat("QS", q.quality_starts, esc(q.role))}</div>`;
+const batBlock = b => `<div class="stats">${stat("AVG", f3(b.avg), b.avg_rank_qualified ? `#${b.avg_rank_qualified} MLB` : `${b.h} H · ${b.pa} PA`)}${stat("OBP", f3(b.obp))}${stat("SLG", f3(b.slg))}${stat("OPS", f3(b.ops), b.ops_rank_qualified ? `#${b.ops_rank_qualified} MLB (${t("qualified")})` : "")}${stat("HR", b.hr, `#${b.hr_rank} MLB`)}${stat("RBI", b.rbi, b.rbi_rank ? `#${b.rbi_rank} MLB` : "")}${stat("SB", b.sb, b.sb_rank && b.sb ? `#${b.sb_rank} MLB` : "")}${stat("K% / BB%", `${f1(b.k_pct)}`, `BB ${f1(b.bb_pct)}%`)}</div>`;
+const fullBat = b => `<h3 style="margin-top:4px">${t("batting")}</h3>` + table(
+  ["games:G", "games_started:GS", "pa:PA", "ab:AB", "r:R", "h:H", "doubles:2B", "triples:3B", "hr:HR", "rbi:RBI", "bb:BB", "ibb:IBB", "so:SO", "hbp:HBP", "sb:SB", "cs:CS", "sf:SF", "tb:TB", "gidp:GIDP"]
+    .map(x => { const [k, h] = x.split(":"); return { h, v: r => r[k] ?? "—" }; })
+    .concat([["avg", "AVG", f3], ["obp", "OBP", f3], ["slg", "SLG", f3], ["ops", "OPS", f3], ["iso", "ISO", f3], ["babip", "BABIP", f3], ["k_pct", "K%", f1], ["bb_pct", "BB%", f1]].map(([k, h, f]) => ({ h, v: r => f(r[k]) }))),
+  [b]);
+const fullPit = q => `<h3 style="margin-top:14px">${t("pitching")}</h3>` + table(
+  ["games:G", "games_started:GS", "w:W", "l:L", "sv:SV", "svo:SVO", "hld:HLD", "bs:BS", "cg:CG", "sho:SHO", "quality_starts:QS", "ip_display:IP", "batters_faced:BF", "pitches:NP", "h:H", "r:R", "er:ER", "bb:BB", "so:SO", "hr:HR", "hbp:HBP"]
+    .map(x => { const [k, h] = x.split(":"); return { h, v: r => r[k] ?? "—" }; })
+    .concat([["era", "ERA", f2], ["whip", "WHIP", f2], ["k_per_9", "K/9", f2], ["bb_per_9", "BB/9", f2], ["hr_per_9", "HR/9", f2], ["k_bb_ratio", "K/BB", f2], ["k_pct", "K%", f1], ["bb_pct", "BB%", f1], ["fip", "FIP", f2]].map(([k, h, f]) => ({ h, v: r => f(r[k]) }))),
+  [q]);
+const pitBlock = q => `<div class="stats">${stat("ERA", f2(q.era), q.era_rank_qualified ? `#${q.era_rank_qualified} MLB` : `${q.ip_display} IP`)}${stat("WHIP", f2(q.whip))}${stat("FIP", f2(q.fip))}${stat("SO", q.so, `#${q.so_rank} MLB`)}${stat("K/9", f2(q.k_per_9), `BB/9 ${f2(q.bb_per_9)}`)}${stat("W-L", `${q.w}-${q.l}`, `SV ${q.sv}${q.sv ? ` (#${q.sv_rank})` : ""} · HLD ${q.hld}`)}${stat("IP", q.ip_display, `${q.games} G · ${q.games_started} GS`)}${stat("QS", q.quality_starts, esc(q.role))}</div>`;
 
 function viewH2H() {
   S.team = S.team || defaultTeam();
@@ -361,29 +429,43 @@ function viewLeaders() {
 }
 
 function viewDR() {
-  const ctry = tbl("countries").filter(r => r.season === S.season && r.season_type === S.type);
-  const dr = ctry.find(r => r.birth_country === "Dominican Republic") || {};
-  const pid = new Set(tbl("players").filter(p => p.birth_country === "Dominican Republic").map(p => p.player_id));
+  const ctry = tbl("countries").filter(r => r.season === S.season && r.season_type === S.type).sort((a, b) => b.players - a.players);
+  if (ctry.length && !ctry.some(r => r.birth_country === S.country)) S.country = ctry[0].birth_country;
+  const sel = ctry.find(r => r.birth_country === S.country) || {};
+  const pid = new Set(tbl("players").filter(p => p.birth_country === S.country).map(p => p.player_id));
   const reg = S.type === "Regular Season";
   const bat = tbl("batting").filter(b => b.season === S.season && b.season_type === S.type && pid.has(b.player_id));
   const pit = tbl("pitching").filter(p => p.season === S.season && p.season_type === S.type && pid.has(p.player_id));
-  const topC = ctry.slice().sort((a, b) => b.players - a.players).slice(0, 10);
-  const latest = tbl("dominican_latest");
+  const topC = ctry.slice(0, 12);
+  if (!topC.some(r => r.birth_country === S.country) && sel.birth_country) topC.push(sel);
+  const latest = tbl("latest_lines").filter(r => r.birth_country === S.country);
+  const lastDay = tbl("latest_lines")[0];
+  const opts = ctry.map(r => `<option value="${esc(r.birth_country)}"${r.birth_country === S.country ? " selected" : ""}>${esc(cname(r.birth_country))} (${r.players})</option>`).join("");
+  const minPA = reg ? 50 : 5, minOuts = reg ? 30 : 3;
   view(`
-    <section><h2>${t("dr")} · ${S.season}</h2><p class="lede">${t("drLede")}</p></section>
-    <div class="stats">${stat(t("drPlayers"), n0(dr.players), `${t("rankCountry")}: #${dr.country_rank_by_players ?? "—"}`)}${stat(t("pctPlayers"), f1(dr.pct_of_players) + "%")}${stat(t("pctHR"), f1(dr.pct_of_home_runs) + "%", `${n0(dr.hr)} HR`)}${stat(t("pctSO"), f1(dr.pct_of_strikeouts) + "%", `${n0(dr.pitcher_strikeouts)} SO`)}</div>
+    <section class="hero"><div class="meta"><h2>${esc(cname(S.country))} · ${S.season}</h2>
+      <p class="lede">${t("ctryLede").replace("{c}", esc(cname(S.country)))}</p></div>
+      <div class="pick"><label for="f-country" class="note">${t("country")}</label><select id="f-country">${opts}</select></div></section>
+    <div class="stats">${stat(t("ctryPlayers"), n0(sel.players), `${t("rankCountry")}: #${sel.country_rank_by_players ?? "—"}`)}${stat(t("pctPlayers"), f1(sel.pct_of_players) + "%", `${n0(sel.hitters)} ${t("hitters").toLowerCase()} · ${n0(sel.pitchers)} ${t("pitchers").toLowerCase()}`)}${stat(t("pctHR"), f1(sel.pct_of_home_runs) + "%", `${n0(sel.hr)} HR`)}${stat(t("pctSO"), f1(sel.pct_of_strikeouts) + "%", `${n0(sel.pitcher_strikeouts)} SO`)}${stat("ERA", f2(sel.era), `${n0(sel.pitcher_wins)} W · ${n0(sel.saves)} SV`)}</div>
     <div class="grid wide">
       <div class="panel"><h3>${t("byCountry")}</h3><div class="chart"><canvas id="c-ctry"></canvas></div></div>
-      <div class="panel"><h3>${t("latest")}${latest.length ? ` · ${latest[0].official_date}` : ""}</h3>${table([{ h: t("player"), l: 1, cls: () => "name", v: r => esc(r.player_name) }, { h: "TM", l: 1, v: r => `${esc(r.team_abbreviation)} ${t("vs")} ${esc(r.opponent)}` }, { h: "POS", l: 1, v: r => esc(r.position) }, { h: t("line"), l: 1, v: r => esc(r.line) }], latest, { click: r => r.player_id })}</div>
+      <div class="panel"><h3>${t("latest")}${lastDay ? ` · ${lastDay.official_date}` : ""}</h3>${table([{ h: t("player"), l: 1, cls: () => "name", v: r => esc(r.player_name) }, { h: "TM", l: 1, v: r => `${esc(r.team_abbreviation)} ${t("vs")} ${esc(r.opponent)}` }, { h: "POS", l: 1, v: r => esc(r.position) }, { h: t("line"), l: 1, v: r => esc(r.line) }], latest, { click: r => "p:" + r.player_id, empty: t("noLatest") })}</div>
     </div>
     <div class="grid wide">
-      <div class="panel"><h3>${t("drHit")}</h3>${table([{ h: t("player"), l: 1, cls: () => "name", v: b => esc(pname(b.player_id)) }, { h: "TM", l: 1, v: b => abbr(b.team_id) }, { h: "PA", v: b => b.pa }, { h: "AVG", v: b => f3(b.avg) }, { h: "OPS", v: b => f3(b.ops) }, { h: "HR", v: b => b.hr }, { h: "RBI", v: b => b.rbi }, { h: "SB", v: b => b.sb }], bat.filter(b => b.pa >= (reg ? 200 : 10)).sort((a, b) => b.ops - a.ops).slice(0, 15), { click: b => b.player_id })}</div>
-      <div class="panel"><h3>${t("drPit")}</h3>${table([{ h: t("player"), l: 1, cls: () => "name", v: p => esc(pname(p.player_id)) }, { h: "TM", l: 1, v: p => abbr(p.team_id) }, { h: "IP", v: p => p.ip_display }, { h: "ERA", v: p => f2(p.era) }, { h: "SO", v: p => p.so }, { h: "W-L", v: p => `${p.w}-${p.l}` }, { h: "SV", v: p => p.sv }], pit.filter(p => p.outs >= (reg ? 150 : 6)).sort((a, b) => b.so - a.so).slice(0, 15), { click: p => p.player_id })}</div>
-    </div>`);
+      <div class="panel"><h3>${t("hitters")} <span class="note">· ${t("minPA")} ${minPA} PA</span></h3>${table([{ h: t("player"), l: 1, cls: () => "name", v: b => esc(pname(b.player_id)) }, { h: "TM", l: 1, v: b => abbr(b.team_id) }, { h: "PA", v: b => b.pa }, { h: "AVG", v: b => f3(b.avg) }, { h: "OPS", v: b => f3(b.ops) }, { h: "HR", v: b => b.hr }, { h: "RBI", v: b => b.rbi }, { h: "SB", v: b => b.sb }], bat.filter(b => b.pa >= minPA).sort((a, b) => b.ops - a.ops).slice(0, 20), { click: b => "p:" + b.player_id })}</div>
+      <div class="panel"><h3>${t("pitchers")} <span class="note">· ${t("minPA")} ${minOuts / 3} IP</span></h3>${table([{ h: t("player"), l: 1, cls: () => "name", v: p => esc(pname(p.player_id)) }, { h: "TM", l: 1, v: p => abbr(p.team_id) }, { h: "IP", v: p => p.ip_display }, { h: "ERA", v: p => f2(p.era) }, { h: "SO", v: p => p.so }, { h: "W-L", v: p => `${p.w}-${p.l}` }, { h: "SV", v: p => p.sv }], pit.filter(p => p.outs >= minOuts).sort((a, b) => b.so - a.so).slice(0, 20), { click: p => "p:" + p.player_id })}</div>
+    </div>
+    <div class="panel"><h3>${t("allCountries")} · ${S.season} <span class="note">· ${t("clickHint")}</span></h3>${table([
+      { h: "#", v: r => r.country_rank_by_players }, { h: t("country"), l: 1, cls: r => "name", v: r => r.birth_country === S.country ? `<b>${esc(cname(r.birth_country))}</b>` : esc(cname(r.birth_country)) },
+      { h: t("ctryPlayers"), v: r => r.players }, { h: t("pctPlayers"), v: r => f1(r.pct_of_players) }, { h: t("hitters"), v: r => r.hitters }, { h: t("pitchers"), v: r => r.pitchers },
+      { h: "H", v: r => n0(r.h) }, { h: "HR", v: r => n0(r.hr) }, { h: t("pctHR"), v: r => f1(r.pct_of_home_runs) }, { h: "SO", v: r => n0(r.pitcher_strikeouts) }, { h: "W", v: r => r.pitcher_wins }, { h: "SV", v: r => r.saves }, { h: "ERA", v: r => f2(r.era) }],
+      ctry, { click: r => "c:" + r.birth_country })}</div>`);
+  document.getElementById("f-country").onchange = e => { S.country = e.target.value; render(); };
   const acc = css("--accent"), muted = css("--chalk");
-  chart("c-ctry", { type: "bar", data: { labels: topC.map(r => r.birth_country), datasets: [{ data: topC.map(r => r.players), backgroundColor: topC.map(r => r.birth_country === "Dominican Republic" ? acc : muted) }] },
-    options: { indexAxis: "y", plugins: { legend: { display: false } }, scales: { x: {}, y: { ticks: { autoSkip: false } } } } });
-  bindRows(k => { S.player = Number(k); go("player"); });
+  chart("c-ctry", { type: "bar", data: { labels: topC.map(r => cname(r.birth_country)), datasets: [{ data: topC.map(r => r.players), backgroundColor: topC.map(r => r.birth_country === S.country ? acc : muted) }] },
+    options: { indexAxis: "y", plugins: { legend: { display: false } }, scales: { x: {}, y: { ticks: { autoSkip: false } } },
+      onClick: (e, els) => { if (els.length) { S.country = topC[els[0].index].birth_country; render(); } } } });
+  bindRows(k => { if (k.startsWith("c:")) { S.country = k.slice(2); render(); window.scrollTo({ top: 0 }); } else { S.player = Number(k.slice(2)); go("player"); } });
 }
 
 function viewQuality() {
@@ -394,7 +476,7 @@ function viewQuality() {
 }
 
 // ---------- shell ----------
-function view(html) { killCharts(); document.getElementById("view").innerHTML = html; }
+function view(html) { killCharts(); document.getElementById("view").innerHTML = html; wireImages(); }
 function bindRows(fn) { document.querySelectorAll("#view tr.click").forEach(tr => tr.onclick = () => fn(tr.dataset.k)); }
 function go(name) { tab = name; try { history.replaceState(null, "", "#" + name); } catch (e) {} render(); window.scrollTo({ top: 0 }); }
 function render() {
