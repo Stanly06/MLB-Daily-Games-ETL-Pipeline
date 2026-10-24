@@ -1,0 +1,79 @@
+// =====================================================================
+// MLB Performance Intelligence — DAX measures
+// Ratios are recomputed from summed components so they stay correct
+// at any filter level (team, season, league, all seasons).
+// =====================================================================
+
+// ---------- Team (fact_team_game) ----------
+Games = COUNTROWS ( fact_team_game )
+Wins = CALCULATE ( COUNTROWS ( fact_team_game ), fact_team_game[is_win] = TRUE () )
+Losses = CALCULATE ( COUNTROWS ( fact_team_game ), fact_team_game[is_loss] = TRUE () )
+Win % = DIVIDE ( [Wins], [Wins] + [Losses] )
+Runs Scored = SUM ( fact_team_game[runs_scored] )
+Runs Allowed = SUM ( fact_team_game[runs_allowed] )
+Run Differential = [Runs Scored] - [Runs Allowed]
+Pythagorean Win % =
+VAR rs = [Runs Scored] ^ 1.83
+VAR ra = [Runs Allowed] ^ 1.83
+RETURN DIVIDE ( rs, rs + ra )
+Expected Wins = [Pythagorean Win %] * [Games]
+Luck (Wins vs Expected) = [Wins] - [Expected Wins]
+Home Record =
+FORMAT ( CALCULATE ( [Wins], fact_team_game[is_home] = TRUE () ), "0" ) & "-" &
+FORMAT ( CALCULATE ( [Losses], fact_team_game[is_home] = TRUE () ), "0" )
+Away Record =
+FORMAT ( CALCULATE ( [Wins], fact_team_game[is_home] = FALSE () ), "0" ) & "-" &
+FORMAT ( CALCULATE ( [Losses], fact_team_game[is_home] = FALSE () ), "0" )
+One-Run Record =
+FORMAT ( CALCULATE ( [Wins], fact_team_game[is_one_run_game] = TRUE () ), "0" ) & "-" &
+FORMAT ( CALCULATE ( [Losses], fact_team_game[is_one_run_game] = TRUE () ), "0" )
+
+// ---------- Batting (fact_batting_game) ----------
+PA = SUM ( fact_batting_game[pa] )
+AB = SUM ( fact_batting_game[ab] )
+H = SUM ( fact_batting_game[h] )
+HR = SUM ( fact_batting_game[hr] )
+RBI = SUM ( fact_batting_game[rbi] )
+SB = SUM ( fact_batting_game[sb] )
+AVG = DIVIDE ( [H], [AB] )
+OBP =
+DIVIDE (
+    [H] + SUM ( fact_batting_game[bb] ) + SUM ( fact_batting_game[hbp] ),
+    [AB] + SUM ( fact_batting_game[bb] ) + SUM ( fact_batting_game[hbp] ) + SUM ( fact_batting_game[sf] )
+)
+SLG = DIVIDE ( SUM ( fact_batting_game[tb] ), [AB] )
+OPS = [OBP] + [SLG]
+K % (Batting) = DIVIDE ( SUM ( fact_batting_game[so] ), [PA] )
+BB % (Batting) = DIVIDE ( SUM ( fact_batting_game[bb] ), [PA] )
+
+// ---------- Pitching (fact_pitching_game) ----------
+Outs = SUM ( fact_pitching_game[outs] )
+IP = DIVIDE ( [Outs], 3 )
+IP Display = FORMAT ( INT ( [Outs] / 3 ), "0" ) & "." & FORMAT ( MOD ( [Outs], 3 ), "0" )
+ERA = DIVIDE ( 27 * SUM ( fact_pitching_game[er] ), [Outs] )
+WHIP = DIVIDE ( 3 * ( SUM ( fact_pitching_game[bb] ) + SUM ( fact_pitching_game[h] ) ), [Outs] )
+K per 9 = DIVIDE ( 27 * SUM ( fact_pitching_game[so] ), [Outs] )
+Pitcher Strikeouts = SUM ( fact_pitching_game[so] )
+Quality Starts = CALCULATE ( COUNTROWS ( fact_pitching_game ), fact_pitching_game[is_quality_start] = TRUE () )
+
+// ---------- Form ----------
+Hot/Cold (OPS last 15 - season) =
+VAR lastGame = MAX ( batting_game_log[player_game_number] )
+RETURN
+    CALCULATE ( MAX ( batting_game_log[ops_last_15] ), batting_game_log[player_game_number] = lastGame )
+        - CALCULATE ( MAX ( batting_game_log[ops_season_to_date] ), batting_game_log[player_game_number] = lastGame )
+
+// ---------- Dominicans in MLB ----------
+Dominican Players =
+CALCULATE ( SUM ( country_season_summary[players] ), country_season_summary[birth_country] = "Dominican Republic" )
+Dominican % of Players =
+DIVIDE ( [Dominican Players], SUM ( country_season_summary[players] ) )
+Dominican % of HR =
+DIVIDE (
+    CALCULATE ( SUM ( country_season_summary[hr] ), country_season_summary[birth_country] = "Dominican Republic" ),
+    SUM ( country_season_summary[hr] )
+)
+
+// ---------- League ----------
+Avg Runs per Game = DIVIDE ( SUM ( league_daily_summary[total_runs] ), SUM ( league_daily_summary[completed_games] ) )
+Postponed Games = SUM ( league_daily_summary[postponed_games] )

@@ -1,84 +1,164 @@
 <p align="center">
-  <img src="thumbnail.png" width="900" alt="MLB Daily Games ETL Pipeline on Databricks"/>
+  <img src="assets/thumbnail_v1.png" width="900" alt="MLB Performance Intelligence Platform on Databricks"/>
 </p>
 
-# MLB Daily Games ETL Pipeline
+# MLB Performance Intelligence Platform
 
-An automated, end-to-end ETL pipeline on **Databricks** that ingests yesterday's MLB games from the public **MLB Stats API**, processes them through a **Bronze → Silver → Gold** Medallion Architecture on **Delta Lake**, and runs every night as a scheduled **Databricks Job**.
+An automated **Databricks Lakehouse** that turns the public **MLB Stats API** into answers analysts
+actually need: *How is this player trending? Is this team as good as its record? Who won when these
+two teams met? How are Dominican players performing?* Every regular-season and postseason game since
+2024 is modeled at **game, team and player level**, validated against **official MLB standings**, and
+served as a star schema for **Power BI** and a static **web platform**.
 
-**Stack:** Python · PySpark · Spark SQL · Delta Lake (MERGE) · Databricks Jobs · REST API
+**Stack:** Python · PySpark · Spark SQL · Delta Lake (MERGE) · Auto Loader · Unity Catalog (catalog, schemas, Volumes) · Lakeflow Jobs · Power BI · REST API
 
-▶️ **Video walkthrough:** https://youtu.be/oDlRG3iUFq8
+> **v2.** The first version ([`legacy/v1`](legacy/v1/)) loaded only yesterday's schedule into a daily
+> summary. v2 adds boxscores, players, teams, venues and standings, a historical backfill, incremental
+> processing, 20 Gold KPI objects, data-quality checks with external reconciliation, a Power BI model
+> and a web explorer.
 
 ---
 
 ## Business problem
 
-Sports dashboards need fresh, reliable game results every morning. Pulling them by hand is slow and error-prone. This pipeline automates the daily load and delivers clean, analytics-ready tables plus an execution log to monitor every run.
+Official baseball data is public but hard to use: it is split across endpoints, player statistics
+exist only game by game inside ~2,500 boxscores per season, and the API has quirks (postponed games
+appear twice, games end early, scorers correct box scores days later). Answering a simple question
+such as *"Is Juan Soto hotter over his last 15 games than his season line?"* means downloading and
+modeling thousands of nested JSON documents.
+
+Full requirements: [Business Requirements Document](docs/01_Business_Requirements_Document.md) ·
+[KPI Catalog](docs/02_KPI_Catalog.md)
+
+## What it answers
+
+| Area | Questions | Gold objects |
+|---|---|---|
+| **Teams** | Record, run differential, home/away and one-run splits, streaks, last 10; **Pythagorean expected wins vs actual ("luck")**; game-by-game trajectory | `team_season_summary`, `team_game_log` |
+| **Head-to-head** | Season and all-time record between two teams, every meeting with score and winning pitcher | `head_to_head`, `fact_game` |
+| **Players** | AVG/OBP/SLG/OPS, ISO, BABIP, K%, BB%; ERA, WHIP, K/9, **FIP**, quality starts; league ranks among qualified players | `player_season_batting`, `player_season_pitching` |
+| **Form** | Rolling last-15-games OPS and last-5-appearances ERA vs season-to-date | `batting_game_log`, `pitching_game_log` |
+| **Dominicans in MLB** | Players by birth country, share of league home runs and strikeouts, top Dominican hitters/pitchers, last night's lines | `country_season_summary`, `dominican_*` |
+| **League & operations** | Games, runs, home runs, attendance, duration per day; run log and data-quality results | `league_daily_summary`, `metadata.*`, `quality.dq_results` |
 
 ## Architecture
 
-<p align="center">
-  <img src="medallion_architecture.png" width="700" alt="Medallion architecture"/>
-</p>
-
 ```mermaid
 flowchart LR
-    A[MLB Stats API<br/>/api/v1/schedule] -->|raw JSON| B[(Bronze<br/>bronze_mlb_schedule_raw)]
-    B -->|parse + MERGE on game_pk| C[(Silver<br/>silver_mlb_games)]
-    C -->|aggregate + MERGE on game_date| D[(Gold<br/>gold_mlb_daily_summary)]
-    B & C & D -.->|status, rows, duration| L[(pipeline_logs)]
+    API[MLB Stats API<br/>schedule · boxscore · people<br/>teams · venues · standings] -->|extract<br/>retries · SHA-256 dedup| RAW[/Volume<br/>bronze.mlb_api_raw/]
+    RAW -->|Auto Loader| B[(Bronze<br/>mlb_api_responses)]
+    B --> S1[(Silver dims<br/>team · venue · player<br/>official standings)]
+    B --> S2[(Silver facts<br/>game · team_game)]
+    B --> S3[(Silver facts<br/>batting · pitching<br/>game details)]
+    S1 & S2 & S3 --> G[(Gold<br/>team · player · H2H<br/>Dominicans · star schema)]
+    G --> Q{{14 DQ checks<br/>incl. standings reconciliation}}
+    G --> PBI[Power BI]
+    G --> WEB[Web platform]
 ```
 
-| Layer | Table | What it holds |
+| Layer | Objects | How it is written |
 |---|---|---|
-| Bronze | `mlb_project.bronze_mlb_schedule_raw` | The raw API response stored as JSON, with request URL, HTTP status, extraction time and run ID. Append-only for traceability. |
-| Silver | `mlb_project.silver_mlb_games` | One row per game: date, season, game type, status, home/away teams and scores, venue, inning state and `is_final` flag. Upserted with `MERGE` on `game_pk`, so re-runs do not create duplicates. |
-| Gold | `mlb_project.gold_mlb_daily_summary` | Daily KPIs: total games, final vs. non-final games, total runs, average runs per game and teams playing. Upserted with `MERGE` on `game_date`. |
-| Logs | `mlb_project.pipeline_logs` | One record per layer and run: status (SUCCESS/FAILED), message, records processed, start/end time and duration in seconds. |
+| Landing | Volume `bronze.mlb_api_raw` — one JSON envelope per request (`<endpoint>/<yyyy>/<mm>/`) | Append-only; responses identical to the last extraction (SHA-256) are not landed |
+| Bronze | `bronze.mlb_api_responses` — raw payload + lineage (file, size, timestamps, batch id) | **Auto Loader**, `trigger(availableNow=True)` |
+| Silver | `dim_team`, `dim_venue`, `dim_player`, `official_standings`, `fact_game`, `fact_team_game`, `fact_batting_game`, `fact_pitching_game`, `game_details` | Typed `from_json` parsing, **incremental MERGE** from a watermark |
+| Gold | 11 KPI tables, 3 Dominican views, star-schema serving views, `dim_date` | Recomputed from Silver each run |
+| Metadata / Quality | `pipeline_runs`, `extract_register`, `watermarks`, `dq_results` | Every task logged; every check stored |
 
-## How it works
+Details: [Data Model & Architecture](docs/04_Data_Model.md) · [Data Source Assessment](docs/03_Data_Source_Assessment.md)
 
-1. **Setup** (`01_setup_tables.ipynb`) creates the `mlb_project` database, the three layer tables and the log table.
-2. **Bronze** (`02_bronze_mlb_api_extract.ipynb`) calls `statsapi.mlb.com/api/v1/schedule` for the previous day (time zone `America/Santo_Domingo`), validates the HTTP status and appends the raw JSON.
-3. **Silver** (`03_silver_mlb_games_transform.ipynb`) reads the latest Bronze record for the date, flattens the nested JSON into a typed schema and merges it into Silver.
-4. **Gold** (`04_gold_mlb_daily_summary.ipynb`) checks that Silver has data for the date, aggregates the daily metrics and merges them into Gold.
-5. **Validation** (`05_validation_queries.ipynb`) contains SQL checks for each layer, the run logs and row counts per layer.
+### Engineering decisions
 
-Every step writes to `pipeline_logs`, and failures are logged with the full error before the task stops.
+- **Postponed games** appear twice in the schedule with the same `gamePk`. The completed entry wins, and the Silver `MERGE` has a guard (`NOT (target.is_completed AND NOT source.is_completed)`) so a completed game can never be overwritten.
+- **Boxscore players** come as a map keyed `"ID<playerId>"`. They are parsed with a typed `map<string, struct>` schema and `explode(map_values())`, so thousands of games are processed in parallel with no Python UDFs.
+- **Innings pitched** are stored as exact outs (`"6.1"` = 19 outs) to avoid decimal errors in ERA, WHIP and FIP.
+- **Scoring corrections**: daily mode re-checks the last 3 days of boxscores; unchanged responses are skipped by hash, changed ones flow through `MERGE`.
+- **Player-game grain includes the team**: one player once appeared for both teams in a single game (see Results).
+- **Shared code** (`src/shared/`): API client, run logging, MERGE helper, watermarks and `from_json` schemas are written once and imported by every notebook.
+
+## Results (validated)
+
+Local end-to-end run on real API data, seasons 2024–2026 (through World Series Game 1, 23 Oct 2026):
+
+| Check | Result |
+|---|---|
+| Games loaded | 7,416 in scope · 7,414 completed (2 rain-cancelled), every completed game with a boxscore |
+| Player lines | 156,064 batting · 63,653 pitching · 2,101 player profiles |
+| Boxscore downloads | 7,414 requests, 0 failures (~2 min with 8 concurrent requests) |
+| Sum of player runs = team runs, per game (DQ-009) | 14,828 / 14,828 team-games |
+| Runs allowed by pitchers = opponent runs (DQ-010) | 14,828 / 14,828 |
+| **W, L, runs scored, runs allowed vs official MLB standings (DQ-013)** | **90 / 90 team-seasons, exact match** |
+| Daily incremental re-run | unchanged responses skipped by hash; no duplicates |
+
+**A real edge case the checks caught.** The first full load failed DQ-005 (duplicate player-game row).
+The cause: on 26 Aug 2024 **Danny Jansen played for both teams in the same game**, a suspended Blue
+Jays–Red Sox game resumed after his trade to Boston, the only time this has happened in MLB history.
+The player-game key became `(game_pk, player_id, team_id)` and the tables were rebuilt with
+`full_refresh`.
 
 ## Automation
 
-<p align="center">
-  <img src="WorkFlow.png" width="800" alt="Databricks Job with four dependent tasks"/>
-</p>
+[`resources/jobs/mlb_performance_daily.job.json`](resources/jobs/mlb_performance_daily.job.json) — a
+Lakeflow Job with 11 dependent tasks, daily at **06:07 America/Santo_Domingo** (after West Coast night
+games end), e-mail alert on failure:
 
-The four notebooks run as dependent tasks in a **Databricks Job** scheduled daily at **12:00 AM (America/Santo_Domingo)**, so each layer only runs after the previous one succeeds.
+```
+extract_mlb_api → bronze_ingest ─┬→ silver_dimensions ─────────────────┐
+                                 └→ silver_games → silver_boxscores ───┼→ gold_team_metrics ───────────────────────┐
+                                                                       └→ gold_player_metrics → gold_dominican_players ┴→ gold_semantic_layer → data_quality → web_platform_export
+```
+
+Job parameters reach every notebook as widgets: `mode` (`daily` / `backfill`), `seasons`,
+`start_date` / `end_date`, `lookback_days`, `refresh_people`, `full_refresh`.
+
+## Run it yourself (Databricks Free Edition)
+
+1. **Workspace → Create → Git folder** with this repository.
+2. Run `src/setup/00_Create_Catalog_Schemas` and `src/setup/01_Create_Metadata_Tables` once.
+3. Create the Job: **Jobs & Pipelines → Create → Job → ⋮ → Edit as JSON**, paste `resources/jobs/mlb_performance_daily.job.json` and adjust the notebook paths to your Git folder.
+4. Historical load: **Run now with different parameters** → `mode = backfill`, `seasons = 2024,2025,2026` (~10 minutes).
+5. From then on the schedule runs the daily incremental load. Check `quality.dq_results` and `metadata.pipeline_runs`.
+6. Optional: run `src/exports/01_Web_Platform_Export` and `python web/build.py mlb_web_data.json` for the web platform; connect Power BI with [`powerbi/README.md`](powerbi/README.md).
+
+### Test locally (no Databricks needed)
+
+```bash
+pip install pyspark==3.5.3 delta-spark==3.2.1 requests pandas pytest
+pytest tests/                                          # unit tests of the extraction helpers
+python tests/local_run.py --start 2025-09-26 --end 2025-09-28   # whole pipeline on 3 days
+python tests/local_run.py --backfill 2025                      # a full season
+```
+
+`tests/local_run.py` executes the notebooks unchanged on local Spark + Delta (it only replaces
+`dbutils`, `display` and Unity Catalog names).
+
+## Dashboard
+
+- **Power BI**: model, relationships, 7 report pages and DAX measures in [`powerbi/`](powerbi/README.md).
+- **Web platform**: [`web/`](web/) builds a single-page explorer (league, team, player, head-to-head, leaders, Dominicans, data quality; Spanish/English) from the Gold export.
 
 ## Repository structure
 
 ```
-├── 01_setup_tables.ipynb
-├── 02_bronze_mlb_api_extract.ipynb
-├── 03_silver_mlb_games_transform.ipynb
-├── 04_gold_mlb_daily_summary.ipynb
-├── 05_validation_queries.ipynb
-├── medallion_architecture.png
-├── WorkFlow.png
-└── thumbnail.png
+├── src/
+│   ├── shared/        config.py · mlb_api.py · pipeline.py · schemas.py
+│   ├── setup/         00_Create_Catalog_Schemas · 01_Create_Metadata_Tables
+│   ├── bronze/        01_MLB_API_Extract · 02_MLB_API_Bronze
+│   ├── silver/        01_Silver_Dimensions · 02_Silver_Games · 03_Silver_Boxscores
+│   ├── gold/          01_Gold_Team_Metrics · 02_Gold_Player_Metrics · 03_Gold_Dominican_Players · 04_Gold_Semantic_Layer
+│   ├── quality/       01_Data_Quality_Checks
+│   └── exports/       01_Web_Platform_Export
+├── resources/jobs/    mlb_performance_daily.job.json
+├── docs/              BRD · KPI catalog · data source assessment · data model
+├── powerbi/           build guide · measures.dax · theme
+├── web/               template.html · build.py
+├── tests/             local_run.py · test_mlb_api.py
+└── legacy/v1/         original daily-summary pipeline
 ```
 
-## Run it yourself
+## Data source and licence
 
-1. Import the notebooks into a Databricks workspace (Free Edition works).
-2. Run `01_setup_tables` once.
-3. Run notebooks 02 → 04 in order, or create a Job with these tasks and dependencies.
-4. Use `05_validation_queries` to check each layer and the logs.
-
-## Next steps
-
-- Power BI report on top of the Gold table.
-- Expectations / data-quality rules on the Silver layer.
+Data from the [MLB Stats API](https://statsapi.mlb.com), © MLB Advanced Media, L.P. Used for a
+non-commercial portfolio project; not affiliated with or endorsed by MLB.
 
 ---
 

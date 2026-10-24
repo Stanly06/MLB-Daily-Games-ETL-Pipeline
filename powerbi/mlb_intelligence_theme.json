@@ -1,0 +1,15 @@
+{
+  "name": "MLB Performance Intelligence",
+  "dataColors": ["#0B3D91", "#C8102E", "#2E8B57", "#F2A900", "#5B6770", "#6A4C93", "#00A3AD", "#E37222"],
+  "background": "#FFFFFF",
+  "foreground": "#1B1F24",
+  "tableAccent": "#0B3D91",
+  "good": "#2E8B57",
+  "neutral": "#F2A900",
+  "bad": "#C8102E",
+  "textClasses": {
+    "title": { "fontFace": "Segoe UI Semibold", "fontSize": 14, "color": "#1B1F24" },
+    "label": { "fontFace": "Segoe UI", "fontSize": 10, "color": "#5B6770" },
+    "callout": { "fontFace": "Segoe UI Semibold", "fontSize": 28, "color": "#0B3D91" }
+  }
+}

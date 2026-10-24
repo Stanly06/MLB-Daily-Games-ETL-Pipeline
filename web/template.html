@@ -1,0 +1,422 @@
+<title>MLB Performance Intelligence</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: press-box stat sheet — sticky scoreboard bar with filters, tabbed views, dense tabular cards */
+:root {
+  --bg: #f2f5f1; --surface: #ffffff; --surface-2: #e7ece5; --line: #cfd8cc;
+  --ink: #15201a; --muted: #5a6b60; --accent: #1d6b47; --accent-ink: #ffffff;
+  --win: #1d6b47; --loss: #b8382c; --gold: #b07d12; --chalk: #c7d2c3;
+  --f-display: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+  --f-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --f-data: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --r: 6px;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0e1511; --surface: #151f19; --surface-2: #1c2a22; --line: #2b3b31;
+  --ink: #e5ece6; --muted: #93a598; --accent: #4fbf87; --accent-ink: #0b1510;
+  --win: #4fbf87; --loss: #ef7a6c; --gold: #e2b54a; --chalk: #33463a; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0e1511; --surface: #151f19; --surface-2: #1c2a22; --line: #2b3b31;
+  --ink: #e5ece6; --muted: #93a598; --accent: #4fbf87; --accent-ink: #0b1510;
+  --win: #4fbf87; --loss: #ef7a6c; --gold: #e2b54a; --chalk: #33463a; color-scheme: dark }
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 14px; line-height: 1.45; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--ink); }
+.wrap { max-width: 1240px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+
+header.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--ink); color: var(--bg); }
+header.bar .wrap { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; padding-block: 10px; }
+.brand { display: flex; align-items: baseline; gap: 10px; margin-right: auto; }
+.brand b { font-family: var(--f-display); font-size: 24px; font-weight: 700; letter-spacing: .02em; text-transform: uppercase; }
+.brand span { font-family: var(--f-data); font-size: 11px; opacity: .7; }
+.filters { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.filters label { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; opacity: .75; }
+select, input[type=search] { font: inherit; font-size: 13px; padding: 6px 8px; border-radius: var(--r); border: 1px solid var(--line); background: var(--surface); color: var(--ink); }
+header select { background: var(--ink); color: var(--bg); border-color: color-mix(in srgb, var(--bg) 35%, transparent); }
+button { font: inherit; cursor: pointer; }
+.lang { border: 1px solid color-mix(in srgb, var(--bg) 35%, transparent); background: transparent; color: var(--bg); border-radius: var(--r); padding: 5px 9px; font-family: var(--f-data); font-size: 12px; }
+:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+nav.tabs { border-bottom: 1px solid var(--line); background: var(--surface); }
+nav.tabs .wrap { display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; }
+nav.tabs a { font-family: var(--f-display); font-size: 17px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); text-decoration: none; padding: 10px 12px 8px; border-bottom: 3px solid transparent; white-space: nowrap; }
+nav.tabs a[aria-current="page"] { color: var(--ink); border-bottom-color: var(--accent); }
+
+main .wrap { padding-block: 20px 48px; display: grid; gap: 20px; }
+h2 { font-family: var(--f-display); font-size: 30px; font-weight: 700; text-transform: uppercase; letter-spacing: .02em; margin: 0; text-wrap: balance; line-height: 1.05; }
+h3 { font-family: var(--f-display); font-size: 18px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; margin: 0 0 10px; color: var(--muted); }
+.lede { color: var(--muted); max-width: 70ch; margin: 6px 0 0; }
+.grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); }
+.grid.wide { grid-template-columns: repeat(auto-fit, minmax(min(100%, 520px), 1fr)); }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 14px 16px; min-width: 0; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
+.stat { background: var(--surface); padding: 12px 14px; display: grid; gap: 2px; align-content: start; }
+.stat .k { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.stat .v { font-family: var(--f-display); font-size: 32px; font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums; }
+.stat .s { font-family: var(--f-data); font-size: 11px; color: var(--muted); }
+.pos { color: var(--win); } .neg { color: var(--loss); }
+
+.tscroll { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+th, td { padding: 6px 8px; text-align: right; white-space: nowrap; border-bottom: 1px solid var(--line); }
+th { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 500; position: sticky; top: 0; background: var(--surface); }
+td { font-family: var(--f-data); font-size: 12.5px; }
+th:first-child, td:first-child, td.l, th.l { text-align: left; }
+td.name { font-family: var(--f-body); font-size: 13.5px; font-weight: 500; }
+tbody tr:hover { background: var(--surface-2); }
+tr.click { cursor: pointer; }
+.pill { display: inline-block; font-family: var(--f-data); font-size: 11px; padding: 1px 7px; border-radius: 999px; border: 1px solid currentColor; }
+.pill.w { color: var(--win); } .pill.l { color: var(--loss); } .pill.g { color: var(--gold); }
+.chip { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 4px; background: var(--surface-2); color: var(--muted); }
+
+.row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.profile { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: baseline; }
+.profile .nm { font-family: var(--f-display); font-size: 40px; font-weight: 700; line-height: 1; text-transform: uppercase; }
+.chart { position: relative; height: 280px; }
+.results { display: flex; flex-wrap: wrap; gap: 6px; }
+.results button { border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: var(--r); padding: 4px 9px; font-size: 13px; }
+.results button:hover { border-color: var(--accent); }
+.note { font-size: 12px; color: var(--muted); }
+.empty { color: var(--muted); padding: 18px 0; }
+footer { color: var(--muted); font-size: 12px; padding-block: 0 32px; }
+@media (max-width: 560px) { .profile .nm { font-size: 30px; } h2 { font-size: 24px; } .stat .v { font-size: 26px; } }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+
+<header class="bar"><div class="wrap">
+  <div class="brand"><b>MLB Performance Intelligence</b><span id="asof"></span></div>
+  <div class="filters">
+    <label for="f-season" data-i="season">Season</label><select id="f-season"></select>
+    <label for="f-type" data-i="type">Type</label><select id="f-type"></select>
+    <button class="lang" id="f-lang" type="button">EN</button>
+  </div>
+</div></header>
+<nav class="tabs" aria-label="Views"><div class="wrap" id="tabs"></div></nav>
+<main><div class="wrap" id="view"></div></main>
+<footer><div class="wrap" id="foot"></div></footer>
+
+<script id="mlb-data" type="application/json">__MLB_DATA__</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+(() => {
+"use strict";
+const RAW = JSON.parse(document.getElementById("mlb-data").textContent);
+
+// ---------- i18n ----------
+const I = {
+  es: { season:"Temporada", type:"Tipo", "Regular Season":"Temporada regular", Postseason:"Postemporada",
+    league:"Liga", team:"Equipo", player:"Jugador", h2h:"Enfrentamientos", leaders:"Líderes", dr:"Dominicanos", quality:"Calidad",
+    asof:"Datos hasta", games:"Juegos", avgRuns:"Carreras por juego", hr:"Jonrones", att:"Asistencia promedio",
+    makeups:"Juegos reprogramados", standings:"Posiciones", luck:"Suerte: victorias reales − esperadas",
+    luckLede:"Victorias por encima (verde) o por debajo (rojo) de lo que predice su diferencial de carreras (expectativa pitagórica).",
+    rdVsW:"Diferencial de carreras vs victorias", leagueLede:"Récord, diferencial de carreras y expectativa pitagórica de cada equipo.",
+    record:"Récord", rd:"Dif. carreras", expW:"Victorias esperadas", streak:"Racha", last10:"Últimos 10",
+    home:"Local", away:"Visitante", oneRun:"Juegos de 1 carrera", extra:"Extra innings", trajectory:"Trayectoria de la temporada",
+    overFive:"Juegos sobre .500", rdCum:"Diferencial acumulado", lastGames:"Últimos juegos", opp:"Rival", res:"Res.",
+    topHitters:"Mejores bateadores", topPitchers:"Mejores lanzadores", search:"Buscar jugador…", searchHint:"Escribe al menos 2 letras del nombre.",
+    noLine:"Sin datos para esta temporada y tipo.", form:"Forma: OPS últimos 15 juegos vs temporada", form5:"Forma: ERA últimas 5 apariciones vs temporada",
+    gameLog:"Registro de juegos", career:"Temporadas", born:"Nació en", bats:"Batea", throws:"Lanza", age:"Edad",
+    vs:"vs", meetings:"Juegos entre ambos", allSeasons:"Todas las temporadas", thisSeason:"Esta temporada", date:"Fecha", score:"Marcador", venue:"Estadio", wp:"Ganador",
+    noMeet:"No se enfrentaron en esta selección.", qualified:"calificados", minPA:"mín.", drLede:"Peloteros nacidos en República Dominicana: cuántos son, qué parte de la producción de la liga aportan y cómo les fue en la última jornada.",
+    drPlayers:"Peloteros dominicanos", pctPlayers:"% de los jugadores", pctHR:"% de los jonrones", pctSO:"% de los ponches", byCountry:"Jugadores por país de nacimiento",
+    drHit:"Bateadores dominicanos", drPit:"Lanzadores dominicanos", latest:"Última jornada", line:"Línea", qLede:"Controles de calidad de la última ejecución del pipeline, incluida la reconciliación con los standings oficiales de MLB.",
+    check:"Control", sev:"Severidad", status:"Estado", failed:"Fallidos", checked:"Revisados", rankCountry:"Lugar por cantidad de jugadores",
+    teamLede:"Récord, splits y evolución juego a juego.", playerLede:"Línea de temporada, ranking en la liga y forma reciente.",
+    h2hLede:"Récord directo entre dos equipos y cada juego en que se enfrentaron.", leadersLede:"Líderes de la liga. Promedios y efectividad entre jugadores calificados.",
+    foot:"Fuente: MLB Stats API (© MLB Advanced Media), procesada en Databricks (Bronze → Silver → Gold). Proyecto de portafolio de Stanly Fernández, sin fines comerciales." },
+  en: { season:"Season", type:"Type", "Regular Season":"Regular season", Postseason:"Postseason",
+    league:"League", team:"Team", player:"Player", h2h:"Head-to-head", leaders:"Leaders", dr:"Dominicans", quality:"Quality",
+    asof:"Data through", games:"Games", avgRuns:"Runs per game", hr:"Home runs", att:"Avg attendance",
+    makeups:"Make-up games", standings:"Standings", luck:"Luck: actual − expected wins",
+    luckLede:"Wins above (green) or below (red) what the run differential predicts (Pythagorean expectation).",
+    rdVsW:"Run differential vs wins", leagueLede:"Every team's record, run differential and Pythagorean expectation.",
+    record:"Record", rd:"Run diff", expW:"Expected wins", streak:"Streak", last10:"Last 10",
+    home:"Home", away:"Away", oneRun:"One-run games", extra:"Extra innings", trajectory:"Season trajectory",
+    overFive:"Games over .500", rdCum:"Cumulative run diff", lastGames:"Recent games", opp:"Opp", res:"Res",
+    topHitters:"Top hitters", topPitchers:"Top pitchers", search:"Search player…", searchHint:"Type at least 2 letters of the name.",
+    noLine:"No data for this season and type.", form:"Form: OPS last 15 games vs season", form5:"Form: ERA last 5 appearances vs season",
+    gameLog:"Game log", career:"Seasons", born:"Born in", bats:"Bats", throws:"Throws", age:"Age",
+    vs:"vs", meetings:"Meetings", allSeasons:"All seasons", thisSeason:"This season", date:"Date", score:"Score", venue:"Venue", wp:"Winner",
+    noMeet:"They did not meet in this selection.", qualified:"qualified", minPA:"min.", drLede:"Players born in the Dominican Republic: how many, what share of league production they deliver, and how they did on the latest game day.",
+    drPlayers:"Dominican players", pctPlayers:"% of players", pctHR:"% of home runs", pctSO:"% of strikeouts", byCountry:"Players by birth country",
+    drHit:"Dominican hitters", drPit:"Dominican pitchers", latest:"Latest game day", line:"Line", qLede:"Data-quality checks from the latest pipeline run, including reconciliation with official MLB standings.",
+    check:"Check", sev:"Severity", status:"Status", failed:"Failed", checked:"Checked", rankCountry:"Rank by number of players",
+    teamLede:"Record, splits and game-by-game trajectory.", playerLede:"Season line, league rank and recent form.",
+    h2hLede:"Head-to-head record between two teams and every game they played.", leadersLede:"League leaders. Rate stats among qualified players.",
+    foot:"Source: MLB Stats API (© MLB Advanced Media), processed on Databricks (Bronze → Silver → Gold). Non-commercial portfolio project by Stanly Fernández." },
+};
+let lang = "es";
+try { lang = localStorage.getItem("mlb-lang") || "es"; } catch (e) {}
+const t = k => (I[lang] && I[lang][k]) || k;
+
+// ---------- data helpers ----------
+const cache = {};
+const tbl = name => cache[name] || (cache[name] = RAW[name].rows.map(r => Object.fromEntries(RAW[name].cols.map((c, i) => [c, r[i]]))));
+const ser = (name, key) => { const s = RAW[name]; const rows = s.series[key] || []; return rows.map(r => Object.fromEntries(s.cols.map((c, i) => [c, r[i]]))); };
+const TEAMS = new Map(tbl("teams").map(x => [x.team_id, x]));
+const PLAYERS = new Map(tbl("players").map(x => [x.player_id, x]));
+const abbr = id => (TEAMS.get(id) || {}).team_abbreviation || "—";
+const pname = id => (PLAYERS.get(id) || {}).player_name || "—";
+const f3 = v => v == null ? "—" : Number(v).toFixed(3).replace(/^0\./, ".").replace(/^-0\./, "-.");
+const f2 = v => v == null ? "—" : Number(v).toFixed(2);
+const f1 = v => v == null ? "—" : Number(v).toFixed(1);
+const n0 = v => v == null ? "—" : Math.round(v).toLocaleString(lang === "es" ? "es-DO" : "en-US");
+const sgn = v => v == null ? "—" : (v > 0 ? "+" : "") + (Number.isInteger(v) ? v : Number(v).toFixed(1));
+const cls = v => v > 0 ? "pos" : v < 0 ? "neg" : "";
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+
+// ---------- state ----------
+const seasons = RAW.meta.seasons.slice().sort((a, b) => b - a);
+const S = { season: seasons[0], type: "Regular Season", team: null, team2: null, player: null, q: "" };
+const TABS = ["league", "team", "player", "h2h", "leaders", "dr", "quality"];
+let tab = TABS.includes(location.hash.slice(1)) ? location.hash.slice(1) : "league";
+const charts = [];
+const killCharts = () => { while (charts.length) charts.pop().destroy(); };
+
+const teamSeasons = () => tbl("team_seasons").filter(r => r.season === S.season && r.season_type === S.type);
+const defaultTeam = () => { const ts = teamSeasons().sort((a, b) => b.wins - a.wins); return ts.length ? ts[0].team_id : tbl("teams")[0].team_id; };
+
+// ---------- rendering helpers ----------
+const stat = (k, v, s, c = "") => `<div class="stat"><span class="k">${k}</span><span class="v ${c}">${v}</span>${s ? `<span class="s">${s}</span>` : ""}</div>`;
+function table(cols, rows, opts = {}) {
+  if (!rows.length) return `<p class="empty">${opts.empty || t("noLine")}</p>`;
+  const head = cols.map(c => `<th class="${c.l ? "l" : ""}">${c.h}</th>`).join("");
+  const body = rows.map(r => `<tr${opts.click ? ` class="click" data-k="${esc(opts.click(r))}"` : ""}>${cols.map(c => `<td class="${c.cls ? c.cls(r) : ""}${c.l ? " l" : ""}">${c.v(r)}</td>`).join("")}</tr>`).join("");
+  return `<div class="tscroll"><table${opts.id ? ` id="${opts.id}"` : ""}><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>`;
+}
+function chart(id, cfg) {
+  const el = document.getElementById(id); if (!el || !window.Chart) return;
+  const ink = css("--muted"), grid = css("--chalk");
+  Chart.defaults.font.family = css("--f-data").replace(/"/g, "");
+  Chart.defaults.color = ink;
+  cfg.options = Object.assign({ responsive: true, maintainAspectRatio: false, animation: false,
+    plugins: { legend: { labels: { boxWidth: 10, color: ink } } } }, cfg.options || {});
+  for (const ax of Object.values(cfg.options.scales || {})) { ax.grid = Object.assign({ color: grid }, ax.grid || {}); ax.ticks = Object.assign({ color: ink }, ax.ticks || {}); }
+  charts.push(new Chart(el, cfg));
+}
+
+// ---------- views ----------
+function viewLeague() {
+  const ts = teamSeasons();
+  const daily = tbl("daily").filter(r => r.season === S.season && r.season_type === S.type);
+  const games = daily.reduce((a, r) => a + (r.completed_games || 0), 0);
+  const runs = daily.reduce((a, r) => a + (r.total_runs || 0), 0);
+  const hr = daily.reduce((a, r) => a + (r.home_runs || 0), 0);
+  const att = daily.filter(r => r.avg_attendance).map(r => [r.avg_attendance, r.completed_games]);
+  const avgAtt = att.length ? att.reduce((a, [v, w]) => a + v * w, 0) / att.reduce((a, [, w]) => a + w, 0) : null;
+  const makeups = daily.reduce((a, r) => a + (r.makeup_games || 0), 0);
+  const divisions = [...new Set(ts.map(r => r.division_name))].sort();
+  const cols = [
+    { h: t("team"), l: 1, cls: () => "name", v: r => esc(r.team_abbreviation) },
+    { h: "W", v: r => r.wins }, { h: "L", v: r => r.losses }, { h: "PCT", v: r => f3(r.win_pct) },
+    ...(S.type === "Regular Season" ? [{ h: "GB", v: r => esc(r.games_back ?? "—") }] : []),
+    { h: t("rd"), v: r => sgn(r.run_differential), cls: r => cls(r.run_differential) },
+    { h: "xW", v: r => f1(r.expected_wins) }, { h: "±", v: r => sgn(r.luck_wins), cls: r => cls(r.luck_wins) },
+    { h: "L10", v: r => `${r.last_10_wins}-${r.last_10_losses}` },
+    { h: t("streak"), v: r => `<span class="pill ${String(r.current_streak).startsWith("W") ? "w" : "l"}">${esc(r.current_streak)}</span>` },
+  ];
+  const standings = S.type === "Regular Season"
+    ? divisions.map(d => `<div class="panel"><h3>${esc(d)}</h3>${table(cols, ts.filter(r => r.division_name === d).sort((a, b) => b.win_pct - a.win_pct), { click: r => r.team_id })}</div>`).join("")
+    : `<div class="panel"><h3>${t("standings")}</h3>${table(cols, ts.slice().sort((a, b) => b.wins - a.wins || b.win_pct - a.win_pct), { click: r => r.team_id })}</div>`;
+  view(`
+    <section><h2>${t("league")} · ${S.season}</h2><p class="lede">${t("leagueLede")}</p></section>
+    <div class="stats">${stat(t("games"), n0(games))}${stat(t("avgRuns"), games ? f2(runs / games) : "—")}${stat(t("hr"), n0(hr), games ? f2(hr / games) + " / G" : "")}${stat(t("att"), n0(avgAtt))}${stat(t("makeups"), n0(makeups))}</div>
+    <div class="grid wide">
+      <div class="panel"><h3>${t("rdVsW")}</h3><div class="chart"><canvas id="c-scatter" aria-label="${t("rdVsW")}"></canvas></div></div>
+      <div class="panel"><h3>${t("luck")}</h3><p class="note">${t("luckLede")}</p><div class="chart"><canvas id="c-luck"></canvas></div></div>
+    </div>
+    <div class="grid">${standings}</div>`);
+  const acc = css("--accent"), win = css("--win"), loss = css("--loss");
+  chart("c-scatter", { type: "scatter", data: { datasets: [{ label: t("team"), data: ts.map(r => ({ x: r.run_differential, y: r.wins, a: r.team_abbreviation })), backgroundColor: acc, pointRadius: 5 }] },
+    options: { plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => `${c.raw.a}: ${sgn(c.raw.x)} RD, ${c.raw.y} W` } } },
+      scales: { x: { title: { display: true, text: t("rd") } }, y: { title: { display: true, text: "W" } } } } });
+  const lk = ts.slice().sort((a, b) => b.luck_wins - a.luck_wins);
+  chart("c-luck", { type: "bar", data: { labels: lk.map(r => r.team_abbreviation), datasets: [{ data: lk.map(r => r.luck_wins), backgroundColor: lk.map(r => r.luck_wins >= 0 ? win : loss) }] },
+    options: { plugins: { legend: { display: false } }, scales: { x: { ticks: { autoSkip: false, maxRotation: 90, font: { size: 10 } } }, y: {} } } });
+  bindRows(k => { S.team = Number(k); go("team"); });
+}
+
+function viewTeam() {
+  S.team = S.team || defaultTeam();
+  const opts = tbl("teams").map(x => `<option value="${x.team_id}"${x.team_id === S.team ? " selected" : ""}>${esc(x.team_name)}</option>`).join("");
+  const r = teamSeasons().find(x => x.team_id === S.team);
+  const log = ser("team_logs", `${S.season}|${S.type}|${S.team}`);
+  const bat = tbl("batting").filter(b => b.season === S.season && b.season_type === S.type && b.team_id === S.team && b.pa >= (S.type === "Regular Season" ? 150 : 10)).sort((a, b) => b.ops - a.ops).slice(0, 8);
+  const pit = tbl("pitching").filter(p => p.season === S.season && p.season_type === S.type && p.team_id === S.team && p.outs >= (S.type === "Regular Season" ? 120 : 9)).sort((a, b) => a.era - b.era).slice(0, 8);
+  view(`
+    <section class="row"><h2>${esc((TEAMS.get(S.team) || {}).team_name)} · ${S.season}</h2>
+      <label for="f-team" class="note">${t("team")}</label><select id="f-team">${opts}</select></section>
+    <p class="lede">${t("teamLede")}</p>
+    ${r ? `<div class="stats">${stat(t("record"), `${r.wins}-${r.losses}`, f3(r.win_pct))}${stat(t("rd"), sgn(r.run_differential), `${f2(r.runs_scored_per_game)} RS/G · ${f2(r.runs_allowed_per_game)} RA/G`, cls(r.run_differential))}${stat(t("expW"), f1(r.expected_wins), `${sgn(r.luck_wins)} vs real`, cls(r.luck_wins))}${stat(t("streak"), esc(r.current_streak), `${t("last10")}: ${r.last_10_wins}-${r.last_10_losses}`)}${stat(t("home"), `${r.home_wins}-${r.home_losses}`, `${t("away")}: ${r.away_wins}-${r.away_losses}`)}${stat(t("oneRun"), `${r.one_run_wins}-${r.one_run_losses}`, `${t("extra")}: ${r.extra_inning_wins}-${r.extra_inning_losses}`)}</div>` : `<p class="empty">${t("noLine")}</p>`}
+    ${log.length ? `<div class="panel"><h3>${t("trajectory")}</h3><div class="chart"><canvas id="c-traj"></canvas></div></div>` : ""}
+    <div class="grid wide">
+      <div class="panel"><h3>${t("topHitters")}</h3>${table([{ h: t("player"), l: 1, cls: () => "name", v: b => esc(pname(b.player_id)) }, { h: "PA", v: b => b.pa }, { h: "AVG", v: b => f3(b.avg) }, { h: "OBP", v: b => f3(b.obp) }, { h: "SLG", v: b => f3(b.slg) }, { h: "OPS", v: b => f3(b.ops) }, { h: "HR", v: b => b.hr }, { h: "RBI", v: b => b.rbi }], bat, { click: b => b.player_id })}</div>
+      <div class="panel"><h3>${t("topPitchers")}</h3>${table([{ h: t("player"), l: 1, cls: () => "name", v: p => esc(pname(p.player_id)) }, { h: "IP", v: p => p.ip_display }, { h: "ERA", v: p => f2(p.era) }, { h: "WHIP", v: p => f2(p.whip) }, { h: "SO", v: p => p.so }, { h: "FIP", v: p => f2(p.fip) }, { h: "W-L", v: p => `${p.w}-${p.l}` }, { h: "SV", v: p => p.sv }], pit, { click: p => p.player_id })}</div>
+    </div>
+    <div class="panel"><h3>${t("lastGames")}</h3>${table([{ h: t("date"), l: 1, v: g => g.official_date }, { h: t("opp"), l: 1, v: g => (g.is_home ? "vs " : "@ ") + abbr(g.opponent_id) }, { h: t("res"), v: g => `<span class="pill ${g.result === "W" ? "w" : "l"}">${g.result} ${g.runs_scored}-${g.runs_allowed}</span>` }, { h: t("record"), v: g => `${g.wins_to_date}-${g.losses_to_date}` }, { h: t("rdCum"), v: g => sgn(g.run_differential_to_date), cls: g => cls(g.run_differential_to_date) }], log.slice(-10).reverse())}</div>`);
+  document.getElementById("f-team").onchange = e => { S.team = Number(e.target.value); render(); };
+  if (log.length) chart("c-traj", { type: "line", data: { labels: log.map(g => g.team_game_number), datasets: [
+      { label: t("overFive"), data: log.map(g => g.wins_to_date - g.losses_to_date), borderColor: css("--accent"), backgroundColor: css("--accent"), pointRadius: 0, borderWidth: 2, yAxisID: "y" },
+      { label: t("rdCum"), data: log.map(g => g.run_differential_to_date), borderColor: css("--gold"), backgroundColor: css("--gold"), pointRadius: 0, borderWidth: 1.5, borderDash: [4, 3], yAxisID: "y2" }] },
+    options: { interaction: { mode: "index", intersect: false }, scales: { x: { title: { display: true, text: t("games") }, ticks: { maxTicksLimit: 12 } }, y: { title: { display: true, text: t("overFive") } }, y2: { position: "right", grid: { drawOnChartArea: false }, title: { display: true, text: t("rdCum") } } } } });
+  bindRows(k => { S.player = Number(k); go("player"); });
+}
+
+function viewPlayer() {
+  if (!S.player) { const top = tbl("batting").filter(b => b.season === S.season && b.season_type === "Regular Season" && b.is_qualified).sort((a, b) => b.ops - a.ops)[0]; S.player = top ? top.player_id : tbl("players")[0].player_id; }
+  const p = PLAYERS.get(S.player) || {};
+  const bat = tbl("batting").filter(b => b.player_id === S.player);
+  const pit = tbl("pitching").filter(x => x.player_id === S.player);
+  const b = bat.find(x => x.season === S.season && x.season_type === S.type);
+  const q = pit.find(x => x.season === S.season && x.season_type === S.type);
+  const blog = ser("batting_logs", `${S.season}|Regular Season|${S.player}`);
+  const plog = ser("pitching_logs", `${S.season}|Regular Season|${S.player}`);
+  const isPitcher = (p.primary_position === "P" || p.primary_position === "TWP") && pit.length;
+  const any = b || q;
+  const team = any ? abbr(any.team_id) : "";
+  view(`
+    <section><h3>${t("player")}</h3>
+      <div class="row"><input type="search" id="f-q" placeholder="${t("search")}" value="${esc(S.q)}" autocomplete="off" aria-label="${t("search")}"></div>
+      <div class="results" id="q-res" style="margin-top:8px"></div></section>
+    <section class="panel"><div class="profile"><span class="nm">${esc(p.player_name)}</span><span class="chip">${esc(team)}</span><span class="chip">${esc(p.primary_position || "")}</span>
+      <span class="note">${t("born")} ${esc(p.birth_country || "—")} · ${t("bats")} ${esc(p.bats || "—")} · ${t("throws")} ${esc(p.throws || "—")}${any && any.age ? ` · ${t("age")} ${any.age}` : ""}</span></div>
+      <p class="lede">${t("playerLede")}</p></section>
+    ${b && !isPitcher ? batBlock(b) : ""}${q ? pitBlock(q) : ""}${b && isPitcher ? batBlock(b) : ""}
+    ${!b && !q ? `<p class="empty">${t("noLine")}</p>` : ""}
+    ${blog.length && !isPitcher ? `<div class="panel"><h3>${t("form")} · ${S.season}</h3><div class="chart"><canvas id="c-form"></canvas></div></div>` : ""}
+    ${plog.length && isPitcher ? `<div class="panel"><h3>${t("form5")} · ${S.season}</h3><div class="chart"><canvas id="c-form"></canvas></div></div>` : ""}
+    <div class="grid wide">
+      ${blog.length && !isPitcher ? `<div class="panel"><h3>${t("gameLog")}</h3>${table([{ h: t("date"), l: 1, v: g => g.game_day }, { h: t("opp"), l: 1, v: g => abbr(g.opponent_id) }, { h: "AB", v: g => g.ab }, { h: "H", v: g => g.h }, { h: "HR", v: g => g.hr }, { h: "RBI", v: g => g.rbi }, { h: "OPS 15", v: g => f3(g.ops_last_15) }, { h: "OPS", v: g => f3(g.ops_season_to_date) }], blog.slice(-12).reverse())}</div>` : ""}
+      ${plog.length && isPitcher ? `<div class="panel"><h3>${t("gameLog")}</h3>${table([{ h: t("date"), l: 1, v: g => g.game_day }, { h: t("opp"), l: 1, v: g => abbr(g.opponent_id) }, { h: "IP", v: g => g.innings_pitched_display }, { h: "ER", v: g => g.er }, { h: "SO", v: g => g.so }, { h: "Dec", v: g => esc(g.decision || "") }, { h: "ERA 5", v: g => f2(g.era_last_5) }, { h: "ERA", v: g => f2(g.era_season_to_date) }], plog.slice(-12).reverse())}</div>` : ""}
+      <div class="panel"><h3>${t("career")}</h3>
+        ${bat.length ? table([{ h: t("season"), l: 1, v: x => `${x.season}${x.season_type === "Postseason" ? " PS" : ""}` }, { h: "TM", v: x => abbr(x.team_id) }, { h: "G", v: x => x.games }, { h: "PA", v: x => x.pa }, { h: "AVG", v: x => f3(x.avg) }, { h: "OBP", v: x => f3(x.obp) }, { h: "SLG", v: x => f3(x.slg) }, { h: "OPS", v: x => f3(x.ops) }, { h: "HR", v: x => x.hr }, { h: "RBI", v: x => x.rbi }], bat.slice().sort((a, b) => a.season - b.season || a.season_type.localeCompare(b.season_type)).reverse()) : ""}
+        ${pit.length ? table([{ h: t("season"), l: 1, v: x => `${x.season}${x.season_type === "Postseason" ? " PS" : ""}` }, { h: "TM", v: x => abbr(x.team_id) }, { h: "G", v: x => x.games }, { h: "GS", v: x => x.games_started }, { h: "IP", v: x => x.ip_display }, { h: "ERA", v: x => f2(x.era) }, { h: "WHIP", v: x => f2(x.whip) }, { h: "SO", v: x => x.so }, { h: "W-L", v: x => `${x.w}-${x.l}` }, { h: "SV", v: x => x.sv }], pit.slice().sort((a, b) => a.season - b.season || a.season_type.localeCompare(b.season_type)).reverse()) : ""}
+      </div>
+    </div>`);
+  const input = document.getElementById("f-q");
+  const showRes = () => {
+    S.q = input.value; const qq = S.q.trim().toLowerCase(); const box = document.getElementById("q-res");
+    if (qq.length < 2) { box.innerHTML = `<span class="note">${t("searchHint")}</span>`; return; }
+    const norm = s => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+    const hits = tbl("players").filter(x => norm(x.player_name).includes(norm(qq))).slice(0, 14);
+    box.innerHTML = hits.map(x => `<button type="button" data-p="${x.player_id}">${esc(x.player_name)}</button>`).join("") || `<span class="note">0</span>`;
+    box.querySelectorAll("button").forEach(btn => btn.onclick = () => { S.player = Number(btn.dataset.p); S.q = ""; render(); });
+  };
+  input.oninput = showRes; showRes();
+  const acc = css("--accent"), gold = css("--gold");
+  if (blog.length && !isPitcher) chart("c-form", { type: "line", data: { labels: blog.map(g => g.game_day), datasets: [
+      { label: "OPS (15)", data: blog.map(g => g.ops_last_15), borderColor: acc, backgroundColor: acc, pointRadius: 0, borderWidth: 2 },
+      { label: "OPS " + t("season").toLowerCase(), data: blog.map(g => g.ops_season_to_date), borderColor: gold, backgroundColor: gold, pointRadius: 0, borderWidth: 1.5, borderDash: [4, 3] }] },
+    options: { interaction: { mode: "index", intersect: false }, scales: { x: { ticks: { maxTicksLimit: 10 } }, y: { suggestedMin: 0.4 } } } });
+  if (plog.length && isPitcher) chart("c-form", { type: "line", data: { labels: plog.map(g => g.game_day), datasets: [
+      { label: "ERA (5)", data: plog.map(g => g.era_last_5), borderColor: acc, backgroundColor: acc, pointRadius: 2, borderWidth: 2 },
+      { label: "ERA " + t("season").toLowerCase(), data: plog.map(g => g.era_season_to_date), borderColor: gold, backgroundColor: gold, pointRadius: 0, borderWidth: 1.5, borderDash: [4, 3] }] },
+    options: { interaction: { mode: "index", intersect: false }, scales: { x: { ticks: { maxTicksLimit: 10 } }, y: { suggestedMin: 0 } } } });
+}
+const batBlock = b => `<div class="stats">${stat("AVG", f3(b.avg), `${b.h} H · ${b.pa} PA`)}${stat("OBP", f3(b.obp))}${stat("SLG", f3(b.slg))}${stat("OPS", f3(b.ops), b.ops_rank_qualified ? `#${b.ops_rank_qualified} MLB (${t("qualified")})` : "")}${stat("HR", b.hr, `#${b.hr_rank} MLB`)}${stat("RBI", b.rbi)}${stat("SB", b.sb)}${stat("K% / BB%", `${f1(b.k_pct)}`, `BB ${f1(b.bb_pct)}%`)}</div>`;
+const pitBlock = q => `<div class="stats">${stat("ERA", f2(q.era), q.era_rank_qualified ? `#${q.era_rank_qualified} MLB` : `${q.ip_display} IP`)}${stat("WHIP", f2(q.whip))}${stat("FIP", f2(q.fip))}${stat("SO", q.so, `#${q.so_rank} MLB`)}${stat("K/9", f2(q.k_per_9), `BB/9 ${f2(q.bb_per_9)}`)}${stat("W-L", `${q.w}-${q.l}`, `SV ${q.sv} · HLD ${q.hld}`)}${stat("IP", q.ip_display, `${q.games} G · ${q.games_started} GS`)}${stat("QS", q.quality_starts, esc(q.role))}</div>`;
+
+function viewH2H() {
+  S.team = S.team || defaultTeam();
+  if (!S.team2 || S.team2 === S.team) { const h = tbl("head_to_head").filter(r => r.team_id === S.team && r.season === S.season && r.season_type === S.type).sort((a, b) => b.games - a.games)[0]; S.team2 = h ? h.opponent_id : tbl("teams").find(x => x.team_id !== S.team).team_id; }
+  const opt = sel => tbl("teams").map(x => `<option value="${x.team_id}"${x.team_id === sel ? " selected" : ""}>${esc(x.team_name)}</option>`).join("");
+  const h2h = tbl("head_to_head").filter(r => r.team_id === S.team && r.opponent_id === S.team2);
+  const cur = h2h.filter(r => r.season === S.season && r.season_type === S.type);
+  const sum = rows => rows.reduce((a, r) => ({ g: a.g + r.games, w: a.w + r.wins, l: a.l + r.losses, rs: a.rs + r.runs_scored, ra: a.ra + r.runs_allowed }), { g: 0, w: 0, l: 0, rs: 0, ra: 0 });
+  const c = sum(cur), all = sum(h2h);
+  const games = tbl("games").filter(g => (g.home_team_id === S.team && g.away_team_id === S.team2) || (g.home_team_id === S.team2 && g.away_team_id === S.team)).reverse();
+  view(`
+    <section><h2>${t("h2h")}</h2><p class="lede">${t("h2hLede")}</p></section>
+    <div class="row"><select id="f-t1" aria-label="${t("team")} 1">${opt(S.team)}</select><span class="note">${t("vs")}</span><select id="f-t2" aria-label="${t("team")} 2">${opt(S.team2)}</select></div>
+    <div class="stats">${stat(`${t("thisSeason")} (${S.season})`, c.g ? `${c.w}-${c.l}` : "—", c.g ? `${abbr(S.team)} · ${c.rs}-${c.ra} R` : t("noMeet"))}${stat(t("allSeasons"), all.g ? `${all.w}-${all.l}` : "—", all.g ? `${all.g} G · ${sgn(all.rs - all.ra)} RD` : "")}${stat(t("meetings"), games.length)}</div>
+    <div class="panel"><h3>${t("meetings")}</h3>${table([
+      { h: t("date"), l: 1, v: g => g.official_date }, { h: "", l: 1, v: g => `<span class="chip">${g.season_type === "Postseason" ? esc(g.series_description || "PS") : g.season}</span>` },
+      { h: t("score"), l: 1, v: g => { const w = g.home_score > g.away_score ? g.home_team_id : g.away_team_id; return `<span class="pill ${w === S.team ? "w" : "l"}">${abbr(g.away_team_id)} ${g.away_score} @ ${abbr(g.home_team_id)} ${g.home_score}${g.innings_played > 9 ? ` (${g.innings_played})` : ""}</span>`; } },
+      { h: t("wp"), l: 1, v: g => esc(pname(g.winning_pitcher_id)) }, { h: t("venue"), l: 1, v: g => esc(g.venue_name) }], games, { empty: t("noMeet") })}</div>`);
+  document.getElementById("f-t1").onchange = e => { S.team = Number(e.target.value); render(); };
+  document.getElementById("f-t2").onchange = e => { S.team2 = Number(e.target.value); render(); };
+}
+
+function viewLeaders() {
+  const reg = S.type === "Regular Season";
+  const bat = tbl("batting").filter(b => b.season === S.season && b.season_type === S.type);
+  const pit = tbl("pitching").filter(p => p.season === S.season && p.season_type === S.type);
+  const qb = reg ? bat.filter(b => b.is_qualified) : bat.filter(b => b.pa >= 15);
+  const qp = reg ? pit.filter(p => p.is_qualified) : pit.filter(p => p.outs >= 15);
+  const top = (rows, key, desc = true, n = 10) => rows.filter(r => r[key] != null).sort((a, b) => desc ? b[key] - a[key] : a[key] - b[key]).slice(0, n);
+  const board = (title, rows, key, fmt, note) => `<div class="panel"><h3>${title}${note ? ` <span class="note">· ${note}</span>` : ""}</h3>${table([{ h: "#", v: (r) => rows.indexOf(r) + 1 }, { h: t("player"), l: 1, cls: () => "name", v: r => esc(pname(r.player_id)) }, { h: "TM", l: 1, v: r => abbr(r.team_id) }, { h: title.split(" ")[0], v: r => fmt(r[key]) }], rows, { click: r => r.player_id })}</div>`;
+  const qnote = reg ? t("qualified") : `${t("minPA")} 15 PA / 5 IP`;
+  view(`
+    <section><h2>${t("leaders")} · ${S.season}</h2><p class="lede">${t("leadersLede")}</p></section>
+    <div class="grid">
+      ${board("OPS", top(qb, "ops"), "ops", f3, qnote)}${board("AVG", top(qb, "avg"), "avg", f3, qnote)}
+      ${board("HR", top(bat, "hr"), "hr", v => v)}${board("RBI", top(bat, "rbi"), "rbi", v => v)}${board("SB", top(bat, "sb"), "sb", v => v)}
+      ${board("ERA", top(qp, "era", false), "era", f2, qnote)}${board("SO", top(pit, "so"), "so", v => v)}${board("SV", top(pit, "sv"), "sv", v => v)}${board("WHIP", top(qp, "whip", false), "whip", f2, qnote)}
+    </div>`);
+  bindRows(k => { S.player = Number(k); go("player"); });
+}
+
+function viewDR() {
+  const ctry = tbl("countries").filter(r => r.season === S.season && r.season_type === S.type);
+  const dr = ctry.find(r => r.birth_country === "Dominican Republic") || {};
+  const pid = new Set(tbl("players").filter(p => p.birth_country === "Dominican Republic").map(p => p.player_id));
+  const reg = S.type === "Regular Season";
+  const bat = tbl("batting").filter(b => b.season === S.season && b.season_type === S.type && pid.has(b.player_id));
+  const pit = tbl("pitching").filter(p => p.season === S.season && p.season_type === S.type && pid.has(p.player_id));
+  const topC = ctry.slice().sort((a, b) => b.players - a.players).slice(0, 10);
+  const latest = tbl("dominican_latest");
+  view(`
+    <section><h2>${t("dr")} · ${S.season}</h2><p class="lede">${t("drLede")}</p></section>
+    <div class="stats">${stat(t("drPlayers"), n0(dr.players), `${t("rankCountry")}: #${dr.country_rank_by_players ?? "—"}`)}${stat(t("pctPlayers"), f1(dr.pct_of_players) + "%")}${stat(t("pctHR"), f1(dr.pct_of_home_runs) + "%", `${n0(dr.hr)} HR`)}${stat(t("pctSO"), f1(dr.pct_of_strikeouts) + "%", `${n0(dr.pitcher_strikeouts)} SO`)}</div>
+    <div class="grid wide">
+      <div class="panel"><h3>${t("byCountry")}</h3><div class="chart"><canvas id="c-ctry"></canvas></div></div>
+      <div class="panel"><h3>${t("latest")}${latest.length ? ` · ${latest[0].official_date}` : ""}</h3>${table([{ h: t("player"), l: 1, cls: () => "name", v: r => esc(r.player_name) }, { h: "TM", l: 1, v: r => `${esc(r.team_abbreviation)} ${t("vs")} ${esc(r.opponent)}` }, { h: "POS", l: 1, v: r => esc(r.position) }, { h: t("line"), l: 1, v: r => esc(r.line) }], latest, { click: r => r.player_id })}</div>
+    </div>
+    <div class="grid wide">
+      <div class="panel"><h3>${t("drHit")}</h3>${table([{ h: t("player"), l: 1, cls: () => "name", v: b => esc(pname(b.player_id)) }, { h: "TM", l: 1, v: b => abbr(b.team_id) }, { h: "PA", v: b => b.pa }, { h: "AVG", v: b => f3(b.avg) }, { h: "OPS", v: b => f3(b.ops) }, { h: "HR", v: b => b.hr }, { h: "RBI", v: b => b.rbi }, { h: "SB", v: b => b.sb }], bat.filter(b => b.pa >= (reg ? 200 : 10)).sort((a, b) => b.ops - a.ops).slice(0, 15), { click: b => b.player_id })}</div>
+      <div class="panel"><h3>${t("drPit")}</h3>${table([{ h: t("player"), l: 1, cls: () => "name", v: p => esc(pname(p.player_id)) }, { h: "TM", l: 1, v: p => abbr(p.team_id) }, { h: "IP", v: p => p.ip_display }, { h: "ERA", v: p => f2(p.era) }, { h: "SO", v: p => p.so }, { h: "W-L", v: p => `${p.w}-${p.l}` }, { h: "SV", v: p => p.sv }], pit.filter(p => p.outs >= (reg ? 150 : 6)).sort((a, b) => b.so - a.so).slice(0, 15), { click: p => p.player_id })}</div>
+    </div>`);
+  const acc = css("--accent"), muted = css("--chalk");
+  chart("c-ctry", { type: "bar", data: { labels: topC.map(r => r.birth_country), datasets: [{ data: topC.map(r => r.players), backgroundColor: topC.map(r => r.birth_country === "Dominican Republic" ? acc : muted) }] },
+    options: { indexAxis: "y", plugins: { legend: { display: false } }, scales: { x: {}, y: { ticks: { autoSkip: false } } } } });
+  bindRows(k => { S.player = Number(k); go("player"); });
+}
+
+function viewQuality() {
+  const q = tbl("quality");
+  view(`<section><h2>${t("quality")}</h2><p class="lede">${t("qLede")}</p></section>
+    <div class="panel">${table([{ h: "ID", l: 1, v: r => r.check_id }, { h: t("check"), l: 1, cls: () => "name", v: r => esc(r.check_name) }, { h: t("sev"), l: 1, v: r => `<span class="chip">${r.severity}</span>` }, { h: t("status"), v: r => `<span class="pill ${r.status === "PASS" ? "w" : r.severity === "CRITICAL" ? "l" : "g"}">${r.status}</span>` }, { h: t("failed"), v: r => n0(r.failed_rows) }, { h: t("checked"), v: r => n0(r.checked_rows) }], q)}
+    <p class="note">${q.length ? q[0].checked_at : ""}</p></div>`);
+}
+
+// ---------- shell ----------
+function view(html) { killCharts(); document.getElementById("view").innerHTML = html; }
+function bindRows(fn) { document.querySelectorAll("#view tr.click").forEach(tr => tr.onclick = () => fn(tr.dataset.k)); }
+function go(name) { tab = name; try { history.replaceState(null, "", "#" + name); } catch (e) {} render(); window.scrollTo({ top: 0 }); }
+function render() {
+  document.documentElement.lang = lang;
+  document.getElementById("f-lang").textContent = lang === "es" ? "EN" : "ES";
+  document.querySelectorAll("[data-i]").forEach(el => el.textContent = t(el.dataset.i));
+  document.getElementById("asof").textContent = `${t("asof")} ${RAW.meta.last_game_date}`;
+  document.getElementById("f-season").innerHTML = seasons.map(s => `<option${s === S.season ? " selected" : ""}>${s}</option>`).join("");
+  const types = ["Regular Season", "Postseason"].filter(ty => tbl("team_seasons").some(r => r.season === S.season && r.season_type === ty));
+  if (!types.includes(S.type)) S.type = types[0] || "Regular Season";
+  document.getElementById("f-type").innerHTML = types.map(ty => `<option value="${ty}"${ty === S.type ? " selected" : ""}>${t(ty)}</option>`).join("");
+  document.getElementById("tabs").innerHTML = TABS.map(k => `<a href="#${k}" data-tab="${k}"${k === tab ? ' aria-current="page"' : ""}>${t(k)}</a>`).join("");
+  document.querySelectorAll("#tabs a").forEach(a => a.onclick = e => { e.preventDefault(); go(a.dataset.tab); });
+  document.getElementById("foot").textContent = t("foot");
+  ({ league: viewLeague, team: viewTeam, player: viewPlayer, h2h: viewH2H, leaders: viewLeaders, dr: viewDR, quality: viewQuality })[tab]();
+}
+document.getElementById("f-season").onchange = e => { S.season = Number(e.target.value); render(); };
+document.getElementById("f-type").onchange = e => { S.type = e.target.value; render(); };
+document.getElementById("f-lang").onclick = () => { lang = lang === "es" ? "en" : "es"; try { localStorage.setItem("mlb-lang", lang); } catch (e) {} render(); };
+window.addEventListener("hashchange", () => { const h = location.hash.slice(1); if (TABS.includes(h) && h !== tab) { tab = h; render(); } });
+window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", render);
+new MutationObserver(render).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+render();
+})();
+</script>

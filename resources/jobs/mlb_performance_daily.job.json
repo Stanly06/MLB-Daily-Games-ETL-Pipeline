@@ -1,0 +1,242 @@
+{
+  "name": "mlb_performance_intelligence_daily",
+  "description": "MLB Performance Intelligence Platform: extracts the MLB Stats API (schedule, boxscores, players, teams, venues, standings), ingests incrementally into Bronze with Auto Loader, builds Silver dimensions and facts and Gold KPIs (team, player, head-to-head, Dominican players, serving layer) and runs data-quality checks including reconciliation with official MLB standings, then exports Gold for the web platform. Daily at 06:07 America/Santo_Domingo (after West Coast night games end). For a historical load use 'Run now with different parameters' with mode=backfill and seasons=2024,2025,2026.",
+  "tags": {
+    "project": "mlb-performance-intelligence",
+    "source": "mlb-stats-api",
+    "environment": "development"
+  },
+  "performance_target": "STANDARD",
+  "max_concurrent_runs": 1,
+  "timeout_seconds": 7200,
+  "email_notifications": {
+    "on_failure": [
+      "sffernandez06@gmail.com"
+    ],
+    "no_alert_for_skipped_runs": true
+  },
+  "schedule": {
+    "quartz_cron_expression": "0 7 6 * * ?",
+    "timezone_id": "America/Santo_Domingo",
+    "pause_status": "UNPAUSED"
+  },
+  "parameters": [
+    {
+      "name": "mode",
+      "default": "daily"
+    },
+    {
+      "name": "seasons",
+      "default": "2024,2025,2026"
+    },
+    {
+      "name": "lookback_days",
+      "default": "3"
+    },
+    {
+      "name": "start_date",
+      "default": ""
+    },
+    {
+      "name": "end_date",
+      "default": ""
+    },
+    {
+      "name": "max_workers",
+      "default": "8"
+    },
+    {
+      "name": "refresh_people",
+      "default": "false"
+    },
+    {
+      "name": "full_refresh",
+      "default": "false"
+    }
+  ],
+  "tasks": [
+    {
+      "task_key": "extract_mlb_api",
+      "description": "Download schedule, boxscores, players, teams, venues and standings from the MLB Stats API into the append-only raw Volume (unchanged responses are skipped by SHA-256)",
+      "notebook_task": {
+        "notebook_path": "/Users/sffernandez06@gmail.com/MLB-Daily-Games-ETL-Pipeline/src/bronze/01_MLB_API_Extract",
+        "source": "WORKSPACE"
+      },
+      "max_retries": 2,
+      "min_retry_interval_millis": 120000,
+      "timeout_seconds": 5400
+    },
+    {
+      "task_key": "bronze_ingest",
+      "description": "Auto Loader: ingest every new JSON envelope into bronze.mlb_api_responses",
+      "notebook_task": {
+        "notebook_path": "/Users/sffernandez06@gmail.com/MLB-Daily-Games-ETL-Pipeline/src/bronze/02_MLB_API_Bronze",
+        "source": "WORKSPACE"
+      },
+      "max_retries": 1,
+      "min_retry_interval_millis": 120000,
+      "timeout_seconds": 1800,
+      "depends_on": [
+        {
+          "task_key": "extract_mlb_api"
+        }
+      ]
+    },
+    {
+      "task_key": "silver_dimensions",
+      "description": "dim_team, dim_venue, dim_player (birth country, is_dominican) and official_standings",
+      "notebook_task": {
+        "notebook_path": "/Users/sffernandez06@gmail.com/MLB-Daily-Games-ETL-Pipeline/src/silver/01_Silver_Dimensions",
+        "source": "WORKSPACE"
+      },
+      "max_retries": 1,
+      "min_retry_interval_millis": 120000,
+      "timeout_seconds": 1800,
+      "depends_on": [
+        {
+          "task_key": "bronze_ingest"
+        }
+      ]
+    },
+    {
+      "task_key": "silver_games",
+      "description": "fact_game and fact_team_game (incremental, guarded MERGE: a completed game is never overwritten by a postponed entry)",
+      "notebook_task": {
+        "notebook_path": "/Users/sffernandez06@gmail.com/MLB-Daily-Games-ETL-Pipeline/src/silver/02_Silver_Games",
+        "source": "WORKSPACE"
+      },
+      "max_retries": 1,
+      "min_retry_interval_millis": 120000,
+      "timeout_seconds": 1800,
+      "depends_on": [
+        {
+          "task_key": "bronze_ingest"
+        }
+      ]
+    },
+    {
+      "task_key": "silver_boxscores",
+      "description": "fact_batting_game, fact_pitching_game and game_details from boxscores (incremental)",
+      "notebook_task": {
+        "notebook_path": "/Users/sffernandez06@gmail.com/MLB-Daily-Games-ETL-Pipeline/src/silver/03_Silver_Boxscores",
+        "source": "WORKSPACE"
+      },
+      "max_retries": 1,
+      "min_retry_interval_millis": 120000,
+      "timeout_seconds": 1800,
+      "depends_on": [
+        {
+          "task_key": "silver_games"
+        }
+      ]
+    },
+    {
+      "task_key": "gold_team_metrics",
+      "description": "team_game_log, team_season_summary (Pythagorean expectation, splits, streaks) and head_to_head",
+      "notebook_task": {
+        "notebook_path": "/Users/sffernandez06@gmail.com/MLB-Daily-Games-ETL-Pipeline/src/gold/01_Gold_Team_Metrics",
+        "source": "WORKSPACE"
+      },
+      "max_retries": 1,
+      "min_retry_interval_millis": 120000,
+      "timeout_seconds": 1800,
+      "depends_on": [
+        {
+          "task_key": "silver_games"
+        },
+        {
+          "task_key": "silver_boxscores"
+        },
+        {
+          "task_key": "silver_dimensions"
+        }
+      ]
+    },
+    {
+      "task_key": "gold_player_metrics",
+      "description": "player_season_batting, player_season_pitching (FIP), batting/pitching game logs with rolling form",
+      "notebook_task": {
+        "notebook_path": "/Users/sffernandez06@gmail.com/MLB-Daily-Games-ETL-Pipeline/src/gold/02_Gold_Player_Metrics",
+        "source": "WORKSPACE"
+      },
+      "max_retries": 1,
+      "min_retry_interval_millis": 120000,
+      "timeout_seconds": 1800,
+      "depends_on": [
+        {
+          "task_key": "silver_boxscores"
+        },
+        {
+          "task_key": "silver_dimensions"
+        }
+      ]
+    },
+    {
+      "task_key": "gold_dominican_players",
+      "description": "country_season_summary and Dominican players views",
+      "notebook_task": {
+        "notebook_path": "/Users/sffernandez06@gmail.com/MLB-Daily-Games-ETL-Pipeline/src/gold/03_Gold_Dominican_Players",
+        "source": "WORKSPACE"
+      },
+      "max_retries": 1,
+      "min_retry_interval_millis": 120000,
+      "timeout_seconds": 1800,
+      "depends_on": [
+        {
+          "task_key": "gold_player_metrics"
+        }
+      ]
+    },
+    {
+      "task_key": "gold_semantic_layer",
+      "description": "dim_date, star-schema views for Power BI and league_daily_summary",
+      "notebook_task": {
+        "notebook_path": "/Users/sffernandez06@gmail.com/MLB-Daily-Games-ETL-Pipeline/src/gold/04_Gold_Semantic_Layer",
+        "source": "WORKSPACE"
+      },
+      "max_retries": 1,
+      "min_retry_interval_millis": 120000,
+      "timeout_seconds": 1800,
+      "depends_on": [
+        {
+          "task_key": "gold_team_metrics"
+        },
+        {
+          "task_key": "gold_dominican_players"
+        }
+      ]
+    },
+    {
+      "task_key": "data_quality",
+      "description": "Completeness, uniqueness, validity, internal reconciliation and reconciliation with official MLB standings; fails the run on any CRITICAL check",
+      "notebook_task": {
+        "notebook_path": "/Users/sffernandez06@gmail.com/MLB-Daily-Games-ETL-Pipeline/src/quality/01_Data_Quality_Checks",
+        "source": "WORKSPACE"
+      },
+      "max_retries": 0,
+      "min_retry_interval_millis": 120000,
+      "timeout_seconds": 1800,
+      "depends_on": [
+        {
+          "task_key": "gold_semantic_layer"
+        }
+      ]
+    },
+    {
+      "task_key": "web_platform_export",
+      "description": "Export Gold to /Volumes/mlb_intelligence/gold/exports/mlb_web_data.json for the static web platform (runs only when data quality passed)",
+      "notebook_task": {
+        "notebook_path": "/Users/sffernandez06@gmail.com/MLB-Daily-Games-ETL-Pipeline/src/exports/01_Web_Platform_Export",
+        "source": "WORKSPACE"
+      },
+      "max_retries": 1,
+      "min_retry_interval_millis": 60000,
+      "timeout_seconds": 1200,
+      "depends_on": [
+        {
+          "task_key": "data_quality"
+        }
+      ]
+    }
+  ]
+}
