@@ -13,7 +13,10 @@
     "on_failure": [
       "sffernandez06@gmail.com"
     ],
-    "no_alert_for_skipped_runs": true
+    "no_alert_for_skipped_runs": true,
+    "on_duration_warning_threshold_exceeded": [
+      "sffernandez06@gmail.com"
+    ]
   },
   "schedule": {
     "quartz_cron_expression": "0 7 6 * * ?",
@@ -238,5 +241,14 @@
         }
       ]
     }
-  ]
+  ],
+  "health": {
+    "rules": [
+      {
+        "metric": "RUN_DURATION_SECONDS",
+        "op": "GREATER_THAN",
+        "value": 3600
+      }
+    ]
+  }
 }

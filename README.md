@@ -125,7 +125,11 @@ databricks bundle run mlb_daily -t prod --params mode=backfill   # historical lo
 After that the daily job runs on its schedule (06:07 America/Santo_Domingo), with e-mail alerts on
 failure and when a run takes longer than one hour.
 
-**Option B — workspace UI.**
+**Option B — from the workspace, no CLI.** Create a Git folder with this repository and run
+[`src/setup/02_Deploy_Jobs`](src/setup/02_Deploy_Jobs.ipynb): it creates or updates both jobs with the notebook's own
+session, runs the setup and starts the 2024–2026 backfill.
+
+**Option C — workspace UI by hand.**
 1. **Workspace → Create → Git folder** with this repository.
 2. Run `src/setup/00_Create_Catalog_Schemas` and `src/setup/01_Create_Metadata_Tables` once.
 3. **Jobs & Pipelines → Create → Job → ⋮ → Edit as JSON**, paste `resources/jobs/mlb_performance_daily.job.json` and adjust the notebook paths to your Git folder.
