@@ -112,12 +112,28 @@ Job parameters reach every notebook as widgets: `mode` (`daily` / `backfill`), `
 
 ## Run it yourself (Databricks Free Edition)
 
+**Option A — Databricks Asset Bundle (recommended).** [`databricks.yml`](databricks.yml) and
+[`resources/mlb_jobs.yml`](resources/mlb_jobs.yml) deploy the notebooks and both jobs in one command:
+
+```bash
+databricks auth login --host https://<your-workspace>.cloud.databricks.com
+databricks bundle deploy -t prod                         # uploads src/, creates the setup and daily jobs
+databricks bundle run mlb_setup -t prod                  # once: catalog, schemas, Volumes, metadata tables
+databricks bundle run mlb_daily -t prod --params mode=backfill   # historical load 2024-2026 (~10 min)
+```
+
+After that the daily job runs on its schedule (06:07 America/Santo_Domingo), with e-mail alerts on
+failure and when a run takes longer than one hour.
+
+**Option B — workspace UI.**
 1. **Workspace → Create → Git folder** with this repository.
 2. Run `src/setup/00_Create_Catalog_Schemas` and `src/setup/01_Create_Metadata_Tables` once.
-3. Create the Job: **Jobs & Pipelines → Create → Job → ⋮ → Edit as JSON**, paste `resources/jobs/mlb_performance_daily.job.json` and adjust the notebook paths to your Git folder.
-4. Historical load: **Run now with different parameters** → `mode = backfill`, `seasons = 2024,2025,2026` (~10 minutes).
-5. From then on the schedule runs the daily incremental load. Check `quality.dq_results` and `metadata.pipeline_runs`.
-6. Optional: run `src/exports/01_Web_Platform_Export` and `python web/build.py mlb_web_data.json` for the web platform; connect Power BI with [`powerbi/README.md`](powerbi/README.md).
+3. **Jobs & Pipelines → Create → Job → ⋮ → Edit as JSON**, paste `resources/jobs/mlb_performance_daily.job.json` and adjust the notebook paths to your Git folder.
+4. **Run now with different parameters** → `mode = backfill`.
+
+Check `quality.dq_results` and `metadata.pipeline_runs` after each run. Optional: run
+`python web/build.py mlb_web_data.json` with the export from `/Volumes/mlb_intelligence/gold/exports/`
+for the web platform, and connect Power BI with [`powerbi/README.md`](powerbi/README.md).
 
 ### Test locally (no Databricks needed)
 
@@ -147,7 +163,8 @@ python tests/local_run.py --backfill 2025                      # a full season
 │   ├── gold/          01_Gold_Team_Metrics · 02_Gold_Player_Metrics · 03_Gold_Dominican_Players · 04_Gold_Semantic_Layer
 │   ├── quality/       01_Data_Quality_Checks
 │   └── exports/       01_Web_Platform_Export
-├── resources/jobs/    mlb_performance_daily.job.json
+├── databricks.yml     Asset Bundle (deploy notebooks + jobs)
+├── resources/         mlb_jobs.yml (bundle jobs) · jobs/mlb_performance_daily.job.json (UI import)
 ├── docs/              BRD · KPI catalog · data source assessment · data model
 ├── powerbi/           build guide · measures.dax · theme
 ├── web/               template.html · build.py

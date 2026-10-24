@@ -28,6 +28,9 @@ POSTSEASON_TYPES = ("F", "D", "L", "W")
 
 DEFAULT_BACKFILL_SEASONS = "2024,2025,2026"
 DOMINICAN_COUNTRY = "Dominican Republic"
+# The API occasionally returns a country code instead of the country name; normalize in Silver
+COUNTRY_ALIASES = {"VEN": "Venezuela", "DOM": "Dominican Republic", "D.R.": "Dominican Republic",
+                   "US": "USA", "United States": "USA", "PR": "Puerto Rico", "CUB": "Cuba", "MEX": "Mexico"}
 
 # Sabermetric constants
 PYTHAGOREAN_EXPONENT = 1.83   # Baseball-Reference "Pythagenport" fixed exponent

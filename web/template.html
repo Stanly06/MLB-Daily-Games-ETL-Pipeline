@@ -1,7 +1,7 @@
 <title>MLB Performance Intelligence</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Noto+Color+Emoji&display=swap">
 <style>
 /* Layout: press-box stat sheet — sticky scoreboard bar with filters, tabbed views, dense tabular cards */
 :root {
@@ -29,7 +29,11 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 
 header.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--ink); color: var(--bg); }
 header.bar .wrap { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; padding-block: 10px; }
-.brand { display: flex; align-items: baseline; gap: 10px; margin-right: auto; }
+.brand { display: flex; align-items: center; gap: 10px; margin-right: auto; }
+.brand .logo { --s: 38px; background: transparent; border: 0; border-radius: 4px; width: calc(var(--s) * 1.75); }
+.brand .logo b { color: var(--bg); }
+.brand .logo img { inset: 0; width: 100%; height: 100%; }
+.brand-text { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
 .brand b { font-family: var(--f-display); font-size: 24px; font-weight: 700; letter-spacing: .02em; text-transform: uppercase; }
 .brand span { font-family: var(--f-data); font-size: 11px; opacity: .7; }
 .filters { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
@@ -92,6 +96,19 @@ tr.click { cursor: pointer; }
 .team-line { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .kv { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 13px; color: var(--muted); }
 .kv b { color: var(--ink); font-weight: 600; }
+.flag { font-family: "Noto Color Emoji", "Apple Color Emoji", "Segoe UI Emoji", sans-serif; font-weight: 400; }
+h2 .flag { font-size: .9em; margin-right: 8px; vertical-align: 1px; }
+.stars { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr)); }
+.star { display: flex; gap: 12px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 10px 12px; cursor: pointer; min-width: 0; }
+.star:hover { border-color: var(--accent); }
+.star .shot { width: 58px; }
+.star .shot b { font-size: 22px; }
+.star .who { display: grid; gap: 2px; min-width: 0; }
+.star .cat { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.star .nm2 { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.star .num { font-family: var(--f-display); font-size: 26px; font-weight: 600; line-height: 1; color: var(--accent); }
+.tall { max-height: 520px; overflow: auto; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .note { font-size: 12px; color: var(--muted); }
 .empty { color: var(--muted); padding: 18px 0; }
 footer { color: var(--muted); font-size: 12px; padding-block: 0 32px; }
@@ -100,7 +117,7 @@ footer { color: var(--muted); font-size: 12px; padding-block: 0 32px; }
 </style>
 
 <header class="bar"><div class="wrap">
-  <div class="brand"><b>MLB Performance Intelligence</b><span id="asof"></span></div>
+  <div class="brand"><span id="mlb-logo"></span><span class="brand-text"><b>MLB Performance Intelligence</b><span id="asof"></span></span></div>
   <div class="filters">
     <label for="f-season" data-i="season">Season</label><select id="f-season"></select>
     <label for="f-type" data-i="type">Type</label><select id="f-type"></select>
@@ -134,7 +151,10 @@ const I = {
     gameLog:"Registro de juegos", career:"Temporadas", born:"Nació en", bats:"Batea", throws:"Lanza", age:"Edad",
     vs:"vs", meetings:"Juegos entre ambos", allSeasons:"Todas las temporadas", thisSeason:"Esta temporada", date:"Fecha", score:"Marcador", venue:"Estadio", wp:"Ganador",
     noMeet:"No se enfrentaron en esta selección.", qualified:"calificados", minPA:"mín.", drLede:"Peloteros nacidos en República Dominicana: cuántos son, qué parte de la producción de la liga aportan y cómo les fue en la última jornada.",
-    country:"País", allCountries:"Todos los países", ctryLede:"Peloteros nacidos en {c}: cuántos son, qué parte de la producción de la liga aportan, quiénes destacan y cómo les fue en la última jornada. Elige cualquier país.",
+    stars:"Destacados", hrLeader:"Líder en jonrones", avgLeader:"Mejor promedio", opsLeader:"Mejor OPS", rbiLeader:"Líder en impulsadas", sbLeader:"Líder en bases robadas",
+    soLeader:"Líder en ponches", eraLeader:"Mejor efectividad", svLeader:"Líder en salvados", wLeader:"Líder en victorias",
+    hrBy:"Jonrones por pelotero", soBy:"Ponches por lanzador", trend:"Evolución por temporada", teamsWith:"Equipos con más peloteros de", positions:"Posiciones",
+    abPerHr:"AB/HR", country:"País", allCountries:"Todos los países", ctryLede:"Peloteros nacidos en {c}: cuántos son, qué parte de la producción de la liga aportan, quiénes destacan y cómo les fue en la última jornada. Elige cualquier país.",
     ctryPlayers:"Peloteros", hitters:"Bateadores", pitchers:"Lanzadores", noLatest:"Ningún pelotero de este país jugó en la última jornada.",
     currentTeam:"Equipo actual", seasonTeam:"Equipo en", position:"Posición", height:"Estatura", weight:"Peso", debut:"Debut en MLB",
     fullStats:"Estadísticas completas", batting:"Bateo", pitching:"Pitcheo", playedFor:"Jugó para {n} equipos", clickHint:"Toca una fila para ver el detalle.",
@@ -158,7 +178,10 @@ const I = {
     gameLog:"Game log", career:"Seasons", born:"Born in", bats:"Bats", throws:"Throws", age:"Age",
     vs:"vs", meetings:"Meetings", allSeasons:"All seasons", thisSeason:"This season", date:"Date", score:"Score", venue:"Venue", wp:"Winner",
     noMeet:"They did not meet in this selection.", qualified:"qualified", minPA:"min.", drLede:"Players born in the Dominican Republic: how many, what share of league production they deliver, and how they did on the latest game day.",
-    country:"Country", allCountries:"All countries", ctryLede:"Players born in {c}: how many, what share of league production they deliver, who stands out and how they did on the latest game day. Pick any country.",
+    stars:"Standouts", hrLeader:"Home run leader", avgLeader:"Best average", opsLeader:"Best OPS", rbiLeader:"RBI leader", sbLeader:"Stolen base leader",
+    soLeader:"Strikeout leader", eraLeader:"Best ERA", svLeader:"Saves leader", wLeader:"Wins leader",
+    hrBy:"Home runs by player", soBy:"Strikeouts by pitcher", trend:"Trend by season", teamsWith:"Teams with the most players from", positions:"Positions",
+    abPerHr:"AB/HR", country:"Country", allCountries:"All countries", ctryLede:"Players born in {c}: how many, what share of league production they deliver, who stands out and how they did on the latest game day. Pick any country.",
     ctryPlayers:"Players", hitters:"Hitters", pitchers:"Pitchers", noLatest:"No player from this country played on the latest game day.",
     currentTeam:"Current team", seasonTeam:"Team in", position:"Position", height:"Height", weight:"Weight", debut:"MLB debut",
     fullStats:"Full stats", batting:"Batting", pitching:"Pitching", playedFor:"Played for {n} teams", clickHint:"Tap a row for details.",
@@ -200,7 +223,7 @@ const initials = n => String(n || "").split(/\s+/).map(w => w[0]).filter(Boolean
 const logo = (id, size = 44) => id ? `<span class="logo" style="--s:${size}px"><b>${esc(abbr(id))}</b><img data-img src="${IMG.logo(id)}" alt="${esc((TEAMS.get(id) || {}).team_name || "")}" loading="lazy"></span>` : "";
 const shot = (pid, name) => `<span class="shot"><b>${esc(initials(name))}</b><img data-img src="${IMG.headshot(pid)}" alt="${esc(name)}" loading="lazy"></span>`;
 function wireImages() {
-  document.querySelectorAll("#view img[data-img]").forEach(img => {
+  document.querySelectorAll("img[data-img]").forEach(img => {
     const drop = () => img.remove();
     img.addEventListener("error", drop, { once: true });
     if (img.complete && img.naturalWidth === 0 && img.currentSrc) drop();
@@ -212,6 +235,19 @@ const CTRY_ES = { "Dominican Republic": "República Dominicana", USA: "Estados U
   "South Africa": "Sudáfrica", Italy: "Italia", France: "Francia", Belgium: "Bélgica", Lithuania: "Lituania", Russia: "Rusia",
   "Virgin Islands": "Islas Vírgenes", "U.S. Virgin Islands": "Islas Vírgenes", Honduras: "Honduras", Unknown: "Desconocido" };
 const cname = c => lang === "es" ? (CTRY_ES[c] || c) : c;
+const ISO2 = { Aruba: "AW", Australia: "AU", Bahamas: "BS", Brazil: "BR", Canada: "CA", Colombia: "CO", Cuba: "CU", Curacao: "CW",
+  "Dominican Republic": "DO", Germany: "DE", Honduras: "HN", Italy: "IT", Japan: "JP", Mexico: "MX", Nicaragua: "NI", Panama: "PA",
+  Peru: "PE", Portugal: "PT", "Puerto Rico": "PR", "Republic of Korea": "KR", Slovakia: "SK", "South Africa": "ZA", Taiwan: "TW",
+  USA: "US", "United Kingdom": "GB", Venezuela: "VE", Netherlands: "NL", Spain: "ES", France: "FR", Belgium: "BE", Lithuania: "LT",
+  Russia: "RU", "Virgin Islands": "VI", "U.S. Virgin Islands": "VI", China: "CN", Philippines: "PH", Jamaica: "JM", Guam: "GU",
+  "American Samoa": "AS", "Czech Republic": "CZ", Israel: "IL", "New Zealand": "NZ", Vietnam: "VN", Belize: "BZ", Sweden: "SE",
+  Austria: "AT", Poland: "PL", Ireland: "IE", Denmark: "DK", Norway: "NO", Switzerland: "CH", Ukraine: "UA", Greece: "GR",
+  Singapore: "SG", Indonesia: "ID", Guatemala: "GT", "El Salvador": "SV", "Costa Rica": "CR", Argentina: "AR", Chile: "CL",
+  Ecuador: "EC", "Hong Kong": "HK", Afghanistan: "AF", "Saudi Arabia": "SA", Iran: "IR", Latvia: "LV", Croatia: "HR" };
+const flagEmoji = c => { const k = ISO2[c]; return k ? String.fromCodePoint(...[...k].map(ch => 127397 + ch.charCodeAt(0))) : "🏳"; };
+const flag = c => `<span class="flag" aria-hidden="true">${flagEmoji(c)}</span>`;
+const leagueLogo = () => { const dark = matchMedia("(prefers-color-scheme: dark)").matches && document.documentElement.dataset.theme !== "light" || document.documentElement.dataset.theme === "dark";
+  return `<span class="logo"><b>MLB</b><img data-img src="https://www.mlbstatic.com/team-logos/league-on-${dark ? "light" : "dark"}/1.svg" alt="MLB"></span>`; };
 const fmtHeight = h => h ? `${Math.floor(h / 12)}' ${h % 12}"` : "—";
 
 // ---------- state ----------
@@ -338,7 +374,7 @@ function viewPlayer() {
           <span>${t("bats")}/${t("throws")}: <b>${esc(p.bats || "—")}/${esc(p.throws || "—")}</b></span>
           ${any && any.age ? `<span>${t("age")} (${S.season}): <b>${any.age}</b></span>` : ""}
           <span>${t("height")}: <b>${fmtHeight(p.height_in)}</b></span><span>${t("weight")}: <b>${p.weight_lb ? p.weight_lb + " lb" : "—"}</b></span>
-          <span>${t("born")}: <b>${esc([p.birth_city, cname(p.birth_country)].filter(Boolean).join(", ") || "—")}</b></span>
+          <span>${t("born")}: <b>${p.birth_country ? flag(p.birth_country) + " " : ""}${esc([p.birth_city, cname(p.birth_country)].filter(Boolean).join(", ") || "—")}</b></span>
           <span>${t("debut")}: <b>${esc(p.mlb_debut_date || "—")}</b></span></div>
         ${any ? `<div class="kv"><span>${t("seasonTeam")} ${S.season} (${t(S.type)}): <b>${esc(team)}</b></span>${any.teams_played > 1 ? `<span>${t("playedFor").replace("{n}", any.teams_played)}</span>` : ""}</div>` : ""}
       </div></section>
@@ -440,10 +476,27 @@ function viewDR() {
   if (!topC.some(r => r.birth_country === S.country) && sel.birth_country) topC.push(sel);
   const latest = tbl("latest_lines").filter(r => r.birth_country === S.country);
   const lastDay = tbl("latest_lines")[0];
-  const opts = ctry.map(r => `<option value="${esc(r.birth_country)}"${r.birth_country === S.country ? " selected" : ""}>${esc(cname(r.birth_country))} (${r.players})</option>`).join("");
+  const minAvgPA = reg ? 200 : 10, minEraOuts = reg ? 90 : 9;
+  const best = (rows, key, desc, fmt, cat, filt = () => true) => { const r = rows.filter(x => x[key] != null && filt(x)).sort((a, b) => desc ? b[key] - a[key] : a[key] - b[key])[0]; return r && (desc ? r[key] > 0 : true) ? { r, val: fmt(r[key]), cat } : null; };
+  const stars = [
+    best(bat, "hr", true, v => v, t("hrLeader")), best(bat, "avg", true, f3, t("avgLeader"), x => x.pa >= minAvgPA),
+    best(bat, "ops", true, f3, t("opsLeader"), x => x.pa >= minAvgPA), best(bat, "rbi", true, v => v, t("rbiLeader")),
+    best(bat, "sb", true, v => v, t("sbLeader")), best(pit, "so", true, v => v, t("soLeader")),
+    best(pit, "era", false, f2, t("eraLeader"), x => x.outs >= minEraOuts), best(pit, "sv", true, v => v, t("svLeader")),
+    best(pit, "w", true, v => v, t("wLeader")),
+  ].filter(Boolean);
+  const hrRows = bat.filter(b => b.hr > 0).sort((a, b) => b.hr - a.hr || b.ops - a.ops);
+  const soRows = pit.filter(p => p.so > 0).sort((a, b) => b.so - a.so);
+  const trendRows = seasons.slice().sort().map(y => tbl("countries").find(r => r.season === y && r.season_type === S.type && r.birth_country === S.country) || { season: y });
+  const teamCount = {}; const seenP = new Set();
+  [...bat, ...pit].forEach(r => { if (!seenP.has(r.player_id)) { seenP.add(r.player_id); teamCount[r.team_id] = (teamCount[r.team_id] || 0) + 1; } });
+  const teamsTop = Object.entries(teamCount).map(([id, n]) => [Number(id), n]).sort((a, b) => b[1] - a[1]).slice(0, 10);
+  const posCount = {}; seenP.forEach(id => { const pos = (PLAYERS.get(id) || {}).primary_position || "?"; posCount[pos] = (posCount[pos] || 0) + 1; });
+  const posChips = Object.entries(posCount).sort((a, b) => b[1] - a[1]).map(([k, n]) => `<span class="chip">${esc(k)} · ${n}</span>`).join("");
+  const opts = ctry.map(r => `<option value="${esc(r.birth_country)}"${r.birth_country === S.country ? " selected" : ""}>${flagEmoji(r.birth_country)} ${esc(cname(r.birth_country))} (${r.players})</option>`).join("");
   const minPA = reg ? 50 : 5, minOuts = reg ? 30 : 3;
   view(`
-    <section class="hero"><div class="meta"><h2>${esc(cname(S.country))} · ${S.season}</h2>
+    <section class="hero"><div class="meta"><h2>${flag(S.country)}${esc(cname(S.country))} · ${S.season}</h2>
       <p class="lede">${t("ctryLede").replace("{c}", esc(cname(S.country)))}</p></div>
       <div class="pick"><label for="f-country" class="note">${t("country")}</label><select id="f-country">${opts}</select></div></section>
     <div class="stats">${stat(t("ctryPlayers"), n0(sel.players), `${t("rankCountry")}: #${sel.country_rank_by_players ?? "—"}`)}${stat(t("pctPlayers"), f1(sel.pct_of_players) + "%", `${n0(sel.hitters)} ${t("hitters").toLowerCase()} · ${n0(sel.pitchers)} ${t("pitchers").toLowerCase()}`)}${stat(t("pctHR"), f1(sel.pct_of_home_runs) + "%", `${n0(sel.hr)} HR`)}${stat(t("pctSO"), f1(sel.pct_of_strikeouts) + "%", `${n0(sel.pitcher_strikeouts)} SO`)}${stat("ERA", f2(sel.era), `${n0(sel.pitcher_wins)} W · ${n0(sel.saves)} SV`)}</div>
@@ -451,12 +504,18 @@ function viewDR() {
       <div class="panel"><h3>${t("byCountry")}</h3><div class="chart"><canvas id="c-ctry"></canvas></div></div>
       <div class="panel"><h3>${t("latest")}${lastDay ? ` · ${lastDay.official_date}` : ""}</h3>${table([{ h: t("player"), l: 1, cls: () => "name", v: r => esc(r.player_name) }, { h: "TM", l: 1, v: r => `${esc(r.team_abbreviation)} ${t("vs")} ${esc(r.opponent)}` }, { h: "POS", l: 1, v: r => esc(r.position) }, { h: t("line"), l: 1, v: r => esc(r.line) }], latest, { click: r => "p:" + r.player_id, empty: t("noLatest") })}</div>
     </div>
+    <section><h3>${t("stars")} · ${flag(S.country)} ${esc(cname(S.country))} · ${S.season}</h3>${stars.length ? `<div class="stars">${stars.map(st => `<div class="star" data-p="${st.r.player_id}" role="button" tabindex="0">${shot(st.r.player_id, pname(st.r.player_id))}<div class="who"><span class="cat">${st.cat}</span><span class="nm2">${esc(pname(st.r.player_id))}</span><span class="note">${logo(st.r.team_id, 18)} ${abbr(st.r.team_id)}</span></div><span class="num" style="margin-left:auto">${st.val}</span></div>`).join("")}</div>` : `<p class="empty">${t("noLine")}</p>`}</section>
     <div class="grid wide">
-      <div class="panel"><h3>${t("hitters")} <span class="note">· ${t("minPA")} ${minPA} PA</span></h3>${table([{ h: t("player"), l: 1, cls: () => "name", v: b => esc(pname(b.player_id)) }, { h: "TM", l: 1, v: b => abbr(b.team_id) }, { h: "PA", v: b => b.pa }, { h: "AVG", v: b => f3(b.avg) }, { h: "OPS", v: b => f3(b.ops) }, { h: "HR", v: b => b.hr }, { h: "RBI", v: b => b.rbi }, { h: "SB", v: b => b.sb }], bat.filter(b => b.pa >= minPA).sort((a, b) => b.ops - a.ops).slice(0, 20), { click: b => "p:" + b.player_id })}</div>
-      <div class="panel"><h3>${t("pitchers")} <span class="note">· ${t("minPA")} ${minOuts / 3} IP</span></h3>${table([{ h: t("player"), l: 1, cls: () => "name", v: p => esc(pname(p.player_id)) }, { h: "TM", l: 1, v: p => abbr(p.team_id) }, { h: "IP", v: p => p.ip_display }, { h: "ERA", v: p => f2(p.era) }, { h: "SO", v: p => p.so }, { h: "W-L", v: p => `${p.w}-${p.l}` }, { h: "SV", v: p => p.sv }], pit.filter(p => p.outs >= minOuts).sort((a, b) => b.so - a.so).slice(0, 20), { click: p => "p:" + p.player_id })}</div>
+      <div class="panel"><h3>${t("hrBy")}</h3><div class="tall">${table([{ h: "#", v: r => hrRows.indexOf(r) + 1 }, { h: t("player"), l: 1, cls: () => "name", v: b => esc(pname(b.player_id)) }, { h: "TM", l: 1, v: b => abbr(b.team_id) }, { h: "HR", v: b => `<b>${b.hr}</b>` }, { h: "PA", v: b => b.pa }, { h: t("abPerHr"), v: b => b.hr ? f1(b.ab / b.hr) : "—" }, { h: "AVG", v: b => f3(b.avg) }, { h: "OPS", v: b => f3(b.ops) }, { h: "RBI", v: b => b.rbi }], hrRows, { click: b => "p:" + b.player_id })}</div></div>
+      <div class="panel"><h3>${t("soBy")}</h3><div class="tall">${table([{ h: "#", v: r => soRows.indexOf(r) + 1 }, { h: t("player"), l: 1, cls: () => "name", v: p => esc(pname(p.player_id)) }, { h: "TM", l: 1, v: p => abbr(p.team_id) }, { h: "SO", v: p => `<b>${p.so}</b>` }, { h: "IP", v: p => p.ip_display }, { h: "K/9", v: p => f2(p.k_per_9) }, { h: "ERA", v: p => f2(p.era) }, { h: "W-L", v: p => `${p.w}-${p.l}` }, { h: "SV", v: p => p.sv }], soRows, { click: p => "p:" + p.player_id })}</div></div>
+    </div>
+    <div class="grid wide">
+      <div class="panel"><h3>${t("trend")} · ${esc(cname(S.country))}</h3><div class="chart"><canvas id="c-trend"></canvas></div></div>
+      <div class="panel"><h3>${t("teamsWith")} ${esc(cname(S.country))}</h3><div class="chart"><canvas id="c-teams"></canvas></div>
+        <h3 style="margin-top:12px">${t("positions")}</h3><div class="chips">${posChips}</div></div>
     </div>
     <div class="panel"><h3>${t("allCountries")} · ${S.season} <span class="note">· ${t("clickHint")}</span></h3>${table([
-      { h: "#", v: r => r.country_rank_by_players }, { h: t("country"), l: 1, cls: r => "name", v: r => r.birth_country === S.country ? `<b>${esc(cname(r.birth_country))}</b>` : esc(cname(r.birth_country)) },
+      { h: "#", v: r => r.country_rank_by_players }, { h: t("country"), l: 1, cls: r => "name", v: r => `${flag(r.birth_country)} ` + (r.birth_country === S.country ? `<b>${esc(cname(r.birth_country))}</b>` : esc(cname(r.birth_country))) },
       { h: t("ctryPlayers"), v: r => r.players }, { h: t("pctPlayers"), v: r => f1(r.pct_of_players) }, { h: t("hitters"), v: r => r.hitters }, { h: t("pitchers"), v: r => r.pitchers },
       { h: "H", v: r => n0(r.h) }, { h: "HR", v: r => n0(r.hr) }, { h: t("pctHR"), v: r => f1(r.pct_of_home_runs) }, { h: "SO", v: r => n0(r.pitcher_strikeouts) }, { h: "W", v: r => r.pitcher_wins }, { h: "SV", v: r => r.saves }, { h: "ERA", v: r => f2(r.era) }],
       ctry, { click: r => "c:" + r.birth_country })}</div>`);
@@ -465,6 +524,13 @@ function viewDR() {
   chart("c-ctry", { type: "bar", data: { labels: topC.map(r => cname(r.birth_country)), datasets: [{ data: topC.map(r => r.players), backgroundColor: topC.map(r => r.birth_country === S.country ? acc : muted) }] },
     options: { indexAxis: "y", plugins: { legend: { display: false } }, scales: { x: {}, y: { ticks: { autoSkip: false } } },
       onClick: (e, els) => { if (els.length) { S.country = topC[els[0].index].birth_country; render(); } } } });
+  chart("c-trend", { type: "bar", data: { labels: trendRows.map(r => r.season), datasets: [
+      { type: "bar", label: t("ctryPlayers"), data: trendRows.map(r => r.players ?? 0), backgroundColor: acc, yAxisID: "y" },
+      { type: "line", label: t("pctHR"), data: trendRows.map(r => r.pct_of_home_runs ?? null), borderColor: css("--gold"), backgroundColor: css("--gold"), yAxisID: "y2", pointRadius: 4 }] },
+    options: { scales: { y: { beginAtZero: true, title: { display: true, text: t("ctryPlayers") } }, y2: { position: "right", beginAtZero: true, grid: { drawOnChartArea: false }, title: { display: true, text: "%" } } } } });
+  chart("c-teams", { type: "bar", data: { labels: teamsTop.map(([id]) => abbr(id)), datasets: [{ data: teamsTop.map(([, n]) => n), backgroundColor: acc }] },
+    options: { plugins: { legend: { display: false } }, scales: { x: { ticks: { autoSkip: false } }, y: { beginAtZero: true, ticks: { precision: 0 } } } } });
+  document.querySelectorAll("#view .star").forEach(el => { const open = () => { S.player = Number(el.dataset.p); go("player"); }; el.onclick = open; el.onkeydown = e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); } }; });
   bindRows(k => { if (k.startsWith("c:")) { S.country = k.slice(2); render(); window.scrollTo({ top: 0 }); } else { S.player = Number(k.slice(2)); go("player"); } });
 }
 
@@ -483,6 +549,7 @@ function render() {
   document.documentElement.lang = lang;
   document.getElementById("f-lang").textContent = lang === "es" ? "EN" : "ES";
   document.querySelectorAll("[data-i]").forEach(el => el.textContent = t(el.dataset.i));
+  document.getElementById("mlb-logo").innerHTML = leagueLogo();
   document.getElementById("asof").textContent = `${t("asof")} ${RAW.meta.last_game_date}`;
   document.getElementById("f-season").innerHTML = seasons.map(s => `<option${s === S.season ? " selected" : ""}>${s}</option>`).join("");
   const types = ["Regular Season", "Postseason"].filter(ty => tbl("team_seasons").some(r => r.season === S.season && r.season_type === ty));

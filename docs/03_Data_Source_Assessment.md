@@ -36,6 +36,7 @@
 | 12 | Box scores can be corrected after the game (scoring changes). | Known MLB practice. | Daily mode re-requests the last `lookback_days` boxscores; unchanged responses are skipped by SHA-256. |
 | 13 | A player can appear for **both teams** in one game. | Game 746942 (Blue Jays at Red Sox, suspended 26 Jun 2024, resumed 26 Aug 2024): Danny Jansen has a TOR line and a BOS line. Found by DQ-005. | Player-game key is `(game_pk, player_id, team_id)`. |
 | 14 | Rain-cancelled games are never played and keep `codedGameState = C`. | 2 cancelled games (2024-09-29, 2026-09-27). | Kept in `fact_game` with `is_completed = false`; excluded from every KPI. |
+| 16 | Birth country is occasionally a code instead of a name. | One player with `birthCountry = 'VEN'`. | Normalized in Silver with `config.COUNTRY_ALIASES` (`VEN` → `Venezuela`). |
 | 15 | A suspended game keeps its original `officialDate` when resumed. | Game 746942 is dated 2024-06-26. | Documented; date-based KPIs use the official date, as MLB does. |
 
 ## 3. Data-quality profile (seasons 2024–2026, regular season + postseason)
