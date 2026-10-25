@@ -92,6 +92,20 @@ def main():
     if not runs:
         print("No runs yet.")
 
+    # 4. Diagnose the latest run that did not succeed: state and error of every task
+    bad = next((r for r in runs if r.get("state", {}).get("result_state") not in (None, "SUCCESS")), None)
+    if bad:
+        detail = api("GET", "/api/2.2/jobs/runs/get", query={"run_id": bad["run_id"]})
+        print(f"\nDiagnosis of run {bad['run_id']}: {detail.get('state', {}).get('state_message', '')[:400]}")
+        for t in detail.get("tasks", []):
+            st = t.get("state", {})
+            line = f"  {t['task_key']:<24} {st.get('life_cycle_state')} {st.get('result_state', '')} {st.get('state_message', '')[:300]}"
+            print(line)
+            if st.get("result_state") in ("FAILED", "TIMEDOUT") or st.get("life_cycle_state") == "INTERNAL_ERROR":
+                out = api("GET", "/api/2.2/jobs/runs/get-output", query={"run_id": t["run_id"]})
+                print(f"    error: {(out.get('error') or '')[:600]}")
+                print(f"    trace: {(out.get('error_trace') or '')[-1500:]}")
+
 
 if __name__ == "__main__":
     main()
