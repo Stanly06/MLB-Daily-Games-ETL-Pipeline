@@ -503,7 +503,7 @@ function viewDR() {
   const teamsTop = Object.entries(teamCount).map(([id, n]) => [Number(id), n]).sort((a, b) => b[1] - a[1]).slice(0, 10);
   const posCount = {}; seenP.forEach(id => { const pos = (PLAYERS.get(id) || {}).primary_position || "?"; posCount[pos] = (posCount[pos] || 0) + 1; });
   const posChips = Object.entries(posCount).sort((a, b) => b[1] - a[1]).map(([k, n]) => `<span class="chip">${esc(k)} · ${n}</span>`).join("");
-  const opts = ctry.map(r => `<option value="${esc(r.birth_country)}"${r.birth_country === S.country ? " selected" : ""}>${flagEmoji(r.birth_country)} ${esc(cname(r.birth_country))} (${r.players})</option>`).join("");
+  const opts = ctry.map(r => `<option value="${esc(r.birth_country)}"${r.birth_country === S.country ? " selected" : ""}>${esc(cname(r.birth_country))} (${r.players})</option>`).join("");
   const minPA = reg ? 50 : 5, minOuts = reg ? 30 : 3;
   view(`
     <section class="hero"><div class="meta"><h2>${flag(S.country)}${esc(cname(S.country))} · ${S.season}</h2>
