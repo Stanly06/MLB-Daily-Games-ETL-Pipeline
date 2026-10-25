@@ -17,6 +17,13 @@ from pyspark.sql import functions as F
 import config as C
 
 
+def num(col, dtype: str = "int"):
+    """ANSI-safe cast of API text to a number: NULL instead of an error when the text is empty or
+    not numeric (Databricks SQL runs in ANSI mode, where a bad cast fails the whole query)."""
+    c = F.trim(F.col(col) if isinstance(col, str) else col)
+    return F.when(c.rlike(r"^-?(\d+\.?\d*|\.\d+)$"), c.cast(dtype))
+
+
 def new_run_id() -> str:
     return str(uuid.uuid4())
 

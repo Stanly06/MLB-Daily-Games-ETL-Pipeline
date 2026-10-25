@@ -44,8 +44,12 @@ def main():
     print(f"Workspace user: {me}\nGit folder: {folder}")
 
     # 1. Git folder -> latest main (create it if it does not exist yet)
-    repos = api("GET", "/api/2.0/repos", query={"path_prefix": folder}).get("repos", [])
-    repo = next((r for r in repos if r.get("path") == folder), None)
+    norm = lambda p: (p or "").removeprefix("/Workspace").rstrip("/").lower()
+    repos = api("GET", "/api/2.0/repos", query={"path_prefix": f"/Users/{me}"}).get("repos", [])
+    repo = next((r for r in repos if norm(r.get("path")) == norm(folder)), None) \
+        or next((r for r in repos if (r.get("url") or "").rstrip("/").lower().endswith("mlb-daily-games-etl-pipeline")), None)
+    for r in repos:
+        print(f"  Git folder in workspace: {r.get('path')} ({r.get('url')})")
     if repo is None:
         repo = api("POST", "/api/2.0/repos", {"url": REPO_URL, "provider": "gitHub", "path": folder})
         print(f"Created Git folder {folder}")
@@ -92,7 +96,18 @@ def main():
     if not runs:
         print("No runs yet.")
 
-    # 4. Diagnose the latest run that did not succeed: state and error of every task
+    # 4. Self-healing: if the daily job has never succeeded and nothing is running, start one backfill
+    #    (already extracted files are skipped, so it only fills what is missing in Silver/Gold).
+    history = api("GET", "/api/2.2/jobs/runs/list", query={"job_id": ids[daily["name"]], "limit": 25}).get("runs", [])
+    active = [r for r in history if r.get("state", {}).get("life_cycle_state") in ("QUEUED", "PENDING", "RUNNING", "TERMINATING", "BLOCKED")]
+    ever_ok = any(r.get("state", {}).get("result_state") == "SUCCESS" for r in history)
+    if not ever_ok and not active and os.environ.get("MLB_AUTO_BACKFILL", "true") == "true":
+        new = api("POST", "/api/2.2/jobs/run-now", {"job_id": ids[daily["name"]], "job_parameters": {"mode": "backfill"}})
+        print(f"\nNo successful run yet: started backfill run {new['run_id']} -> {HOST}/jobs/{ids[daily['name']]}/runs/{new['run_id']}")
+    elif active:
+        print(f"\nA run is in progress: {active[0]['run_id']} ({active[0]['state'].get('life_cycle_state')})")
+
+    # 5. Diagnose the latest run that did not succeed: state and error of every task
     bad = next((r for r in runs if r.get("state", {}).get("result_state") not in (None, "SUCCESS")), None)
     if bad:
         detail = api("GET", "/api/2.2/jobs/runs/get", query={"run_id": bad["run_id"]})

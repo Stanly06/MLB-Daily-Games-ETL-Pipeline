@@ -56,6 +56,7 @@ def build_spark():
          .config("spark.sql.shuffle.partitions", "8")
          .config("spark.ui.enabled", "false").config("spark.ui.showConsoleProgress", "false")
          .config("spark.sql.session.timeZone", "UTC")
+         .config("spark.sql.ansi.enabled", "true")  # same strict SQL mode as Databricks serverless
          .config("spark.hadoop.javax.jdo.option.ConnectionURL", f"jdbc:derby:;databaseName={WORK / 'metastore_db'};create=true")
          .enableHiveSupport())  # persistent local catalog, so --from-step can resume
     if os.environ.get("DELTA_JARS"):
