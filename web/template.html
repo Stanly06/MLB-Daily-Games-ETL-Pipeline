@@ -3,35 +3,34 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Noto+Color+Emoji&display=swap">
 <style>
-/* Layout: press-box stat sheet — sticky scoreboard bar with filters, tabbed views, dense tabular cards */
+/* Layout: day game at the ballpark — MLB-red scoreboard bar with a baseball-stitch seam, white field of tabs and stat sheets; one committed light look */
 :root {
-  --bg: #f2f5f1; --surface: #ffffff; --surface-2: #e7ece5; --line: #cfd8cc;
-  --ink: #15201a; --muted: #5a6b60; --accent: #1d6b47; --accent-ink: #ffffff;
-  --win: #1d6b47; --loss: #b8382c; --gold: #b07d12; --chalk: #c7d2c3;
+  --bg: #ffffff; --surface: #ffffff; --surface-2: #f2f4f1; --line: #dde1da;
+  --ink: #1b1e1c; --muted: #5f6762; --accent: #c8102e; --accent-ink: #ffffff;
+  --win: #1f7a3f; --loss: #c8102e; --gold: #c47a26; --chalk: #d6dbd3;
+  --bar: #c8102e; --bar-ink: #ffffff; --seam: #ffffff;
   --f-display: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
   --f-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
   --f-data: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
   --r: 6px;
+  color-scheme: light;
 }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
-  --bg: #0e1511; --surface: #151f19; --surface-2: #1c2a22; --line: #2b3b31;
-  --ink: #e5ece6; --muted: #93a598; --accent: #4fbf87; --accent-ink: #0b1510;
-  --win: #4fbf87; --loss: #ef7a6c; --gold: #e2b54a; --chalk: #33463a; color-scheme: dark } }
-:root[data-theme="dark"] {
-  --bg: #0e1511; --surface: #151f19; --surface-2: #1c2a22; --line: #2b3b31;
-  --ink: #e5ece6; --muted: #93a598; --accent: #4fbf87; --accent-ink: #0b1510;
-  --win: #4fbf87; --loss: #ef7a6c; --gold: #e2b54a; --chalk: #33463a; color-scheme: dark }
 
 * { box-sizing: border-box; }
 body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 14px; line-height: 1.45; }
-body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--ink); }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bar); }
 .wrap { max-width: 1240px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
 
-header.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--ink); color: var(--bg); }
+header.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bar); color: var(--bar-ink); }
+/* baseball seam: a white strip with red stitches under the scoreboard bar */
+header.bar::after { content: ""; display: block; height: 9px; background:
+  repeating-linear-gradient(120deg, transparent 0 7px, var(--accent) 7px 9px, transparent 9px 16px) top / 100% 4px no-repeat,
+  repeating-linear-gradient(60deg, transparent 0 7px, var(--accent) 7px 9px, transparent 9px 16px) bottom / 100% 4px no-repeat,
+  var(--seam); border-bottom: 1px solid var(--line); }
 header.bar .wrap { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; padding-block: 10px; }
 .brand { display: flex; align-items: center; gap: 10px; margin-right: auto; }
 .brand .logo { --s: 38px; background: transparent; border: 0; border-radius: 4px; width: calc(var(--s) * 1.75); }
-.brand .logo b { color: var(--bg); }
+.brand .logo b { color: var(--bar-ink); font-size: 15px; }
 .brand .logo img { inset: 0; width: 100%; height: 100%; }
 .brand-text { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
 .brand b { font-family: var(--f-display); font-size: 24px; font-weight: 700; letter-spacing: .02em; text-transform: uppercase; }
@@ -39,12 +38,14 @@ header.bar .wrap { display: flex; flex-wrap: wrap; align-items: center; gap: 10p
 .filters { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .filters label { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; opacity: .75; }
 select, input[type=search] { font: inherit; font-size: 13px; padding: 6px 8px; border-radius: var(--r); border: 1px solid var(--line); background: var(--surface); color: var(--ink); }
-header select { background: var(--ink); color: var(--bg); border-color: color-mix(in srgb, var(--bg) 35%, transparent); }
+header select { background: var(--bar-ink); color: var(--ink); border-color: transparent; }
 button { font: inherit; cursor: pointer; }
-.lang { border: 1px solid color-mix(in srgb, var(--bg) 35%, transparent); background: transparent; color: var(--bg); border-radius: var(--r); padding: 5px 9px; font-family: var(--f-data); font-size: 12px; }
+.lang { border: 1px solid color-mix(in srgb, var(--bar-ink) 60%, transparent); background: transparent; color: var(--bar-ink); border-radius: var(--r); padding: 5px 9px; font-family: var(--f-data); font-size: 12px; }
 :focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+header :focus-visible { outline-color: var(--bar-ink); }
 
 nav.tabs { border-bottom: 1px solid var(--line); background: var(--surface); }
+nav.tabs a:hover { color: var(--ink); }
 nav.tabs .wrap { display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; }
 nav.tabs a { font-family: var(--f-display); font-size: 17px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); text-decoration: none; padding: 10px 12px 8px; border-bottom: 3px solid transparent; white-space: nowrap; }
 nav.tabs a[aria-current="page"] { color: var(--ink); border-bottom-color: var(--accent); }
@@ -109,6 +110,11 @@ h2 .flag { font-size: .9em; margin-right: 8px; vertical-align: 1px; }
 .star .num { font-family: var(--f-display); font-size: 26px; font-weight: 600; line-height: 1; color: var(--accent); }
 .tall { max-height: 520px; overflow: auto; }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.pc { display: inline-flex; align-items: center; gap: 8px; }
+.av { position: relative; display: inline-grid; place-items: center; width: 28px; height: 28px; flex: none; border-radius: 50%; background: var(--surface-2); border: 1px solid var(--line); overflow: hidden; }
+.av b { font-family: var(--f-display); font-size: 11px; font-weight: 600; color: var(--muted); }
+.av img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: top; }
+td .logo { margin-right: 6px; }
 .note { font-size: 12px; color: var(--muted); }
 .empty { color: var(--muted); padding: 18px 0; }
 footer { color: var(--muted); font-size: 12px; padding-block: 0 32px; }
@@ -221,6 +227,9 @@ const IMG = {
 };
 const initials = n => String(n || "").split(/\s+/).map(w => w[0]).filter(Boolean).slice(0, 2).join("");
 const logo = (id, size = 44) => id ? `<span class="logo" style="--s:${size}px"><b>${esc(abbr(id))}</b><img data-img src="${IMG.logo(id)}" alt="${esc((TEAMS.get(id) || {}).team_name || "")}" loading="lazy"></span>` : "";
+const thumb = id => `https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_60,q_auto:best/v1/people/${id}/headshot/67/current`;
+const pcell = id => `<span class="pc"><span class="av"><b>${esc(initials(pname(id)))}</b><img data-img src="${thumb(id)}" alt="" loading="lazy"></span><span>${esc(pname(id))}</span></span>`;
+const tcell = id => `<span class="pc">${logo(id, 22)}<span>${esc(abbr(id))}</span></span>`;
 const shot = (pid, name) => `<span class="shot"><b>${esc(initials(name))}</b><img data-img src="${IMG.headshot(pid)}" alt="${esc(name)}" loading="lazy"></span>`;
 function wireImages() {
   document.querySelectorAll("img[data-img]").forEach(img => {
@@ -247,7 +256,7 @@ const ISO2 = { Aruba: "AW", Australia: "AU", Bahamas: "BS", Brazil: "BR", Canada
 const flagEmoji = c => { const k = ISO2[c]; return k ? String.fromCodePoint(...[...k].map(ch => 127397 + ch.charCodeAt(0))) : "🏳"; };
 const flag = c => `<span class="flag" aria-hidden="true">${flagEmoji(c)}</span>`;
 const leagueLogo = () => { const dark = matchMedia("(prefers-color-scheme: dark)").matches && document.documentElement.dataset.theme !== "light" || document.documentElement.dataset.theme === "dark";
-  return `<span class="logo"><b>MLB</b><img data-img src="https://www.mlbstatic.com/team-logos/league-on-${dark ? "light" : "dark"}/1.svg" alt="MLB"></span>`; };
+  return `<span class="logo"><b>MLB</b><img data-img src="https://www.mlbstatic.com/team-logos/league-on-dark/1.svg" alt="MLB"></span>`; };
 const fmtHeight = h => h ? `${Math.floor(h / 12)}' ${h % 12}"` : "—";
 
 // ---------- state ----------
@@ -293,7 +302,7 @@ function viewLeague() {
   const makeups = daily.reduce((a, r) => a + (r.makeup_games || 0), 0);
   const divisions = [...new Set(ts.map(r => r.division_name))].sort();
   const cols = [
-    { h: t("team"), l: 1, cls: () => "name", v: r => esc(r.team_abbreviation) },
+    { h: t("team"), l: 1, cls: () => "name", v: r => tcell(r.team_id) },
     { h: "W", v: r => r.wins }, { h: "L", v: r => r.losses }, { h: "PCT", v: r => f3(r.win_pct) },
     ...(S.type === "Regular Season" ? [{ h: "GB", v: r => esc(r.games_back ?? "—") }] : []),
     { h: t("rd"), v: r => sgn(r.run_differential), cls: r => cls(r.run_differential) },
@@ -338,8 +347,8 @@ function viewTeam() {
     ${r ? `<div class="stats">${stat(t("record"), `${r.wins}-${r.losses}`, f3(r.win_pct))}${stat(t("rd"), sgn(r.run_differential), `${f2(r.runs_scored_per_game)} RS/G · ${f2(r.runs_allowed_per_game)} RA/G`, cls(r.run_differential))}${stat(t("expW"), f1(r.expected_wins), `${sgn(r.luck_wins)} vs real`, cls(r.luck_wins))}${stat(t("streak"), esc(r.current_streak), `${t("last10")}: ${r.last_10_wins}-${r.last_10_losses}`)}${stat(t("home"), `${r.home_wins}-${r.home_losses}`, `${t("away")}: ${r.away_wins}-${r.away_losses}`)}${stat(t("oneRun"), `${r.one_run_wins}-${r.one_run_losses}`, `${t("extra")}: ${r.extra_inning_wins}-${r.extra_inning_losses}`)}</div>` : `<p class="empty">${t("noLine")}</p>`}
     ${log.length ? `<div class="panel"><h3>${t("trajectory")}</h3><div class="chart"><canvas id="c-traj"></canvas></div></div>` : ""}
     <div class="grid wide">
-      <div class="panel"><h3>${t("topHitters")}</h3>${table([{ h: t("player"), l: 1, cls: () => "name", v: b => esc(pname(b.player_id)) }, { h: "PA", v: b => b.pa }, { h: "AVG", v: b => f3(b.avg) }, { h: "OBP", v: b => f3(b.obp) }, { h: "SLG", v: b => f3(b.slg) }, { h: "OPS", v: b => f3(b.ops) }, { h: "HR", v: b => b.hr }, { h: "RBI", v: b => b.rbi }], bat, { click: b => b.player_id })}</div>
-      <div class="panel"><h3>${t("topPitchers")}</h3>${table([{ h: t("player"), l: 1, cls: () => "name", v: p => esc(pname(p.player_id)) }, { h: "IP", v: p => p.ip_display }, { h: "ERA", v: p => f2(p.era) }, { h: "WHIP", v: p => f2(p.whip) }, { h: "SO", v: p => p.so }, { h: "FIP", v: p => f2(p.fip) }, { h: "W-L", v: p => `${p.w}-${p.l}` }, { h: "SV", v: p => p.sv }], pit, { click: p => p.player_id })}</div>
+      <div class="panel"><h3>${t("topHitters")}</h3>${table([{ h: t("player"), l: 1, cls: () => "name", v: b => pcell(b.player_id) }, { h: "PA", v: b => b.pa }, { h: "AVG", v: b => f3(b.avg) }, { h: "OBP", v: b => f3(b.obp) }, { h: "SLG", v: b => f3(b.slg) }, { h: "OPS", v: b => f3(b.ops) }, { h: "HR", v: b => b.hr }, { h: "RBI", v: b => b.rbi }], bat, { click: b => b.player_id })}</div>
+      <div class="panel"><h3>${t("topPitchers")}</h3>${table([{ h: t("player"), l: 1, cls: () => "name", v: p => pcell(p.player_id) }, { h: "IP", v: p => p.ip_display }, { h: "ERA", v: p => f2(p.era) }, { h: "WHIP", v: p => f2(p.whip) }, { h: "SO", v: p => p.so }, { h: "FIP", v: p => f2(p.fip) }, { h: "W-L", v: p => `${p.w}-${p.l}` }, { h: "SV", v: p => p.sv }], pit, { click: p => p.player_id })}</div>
     </div>
     <div class="panel"><h3>${t("lastGames")}</h3>${table([{ h: t("date"), l: 1, v: g => g.official_date }, { h: t("opp"), l: 1, v: g => (g.is_home ? "vs " : "@ ") + abbr(g.opponent_id) }, { h: t("res"), v: g => `<span class="pill ${g.result === "W" ? "w" : "l"}">${g.result} ${g.runs_scored}-${g.runs_allowed}</span>` }, { h: t("record"), v: g => `${g.wins_to_date}-${g.losses_to_date}` }, { h: t("rdCum"), v: g => sgn(g.run_differential_to_date), cls: g => cls(g.run_differential_to_date) }], log.slice(-10).reverse())}</div>`);
   document.getElementById("f-team").onchange = e => { S.team = Number(e.target.value); render(); };
@@ -376,7 +385,7 @@ function viewPlayer() {
           <span>${t("height")}: <b>${fmtHeight(p.height_in)}</b></span><span>${t("weight")}: <b>${p.weight_lb ? p.weight_lb + " lb" : "—"}</b></span>
           <span>${t("born")}: <b>${p.birth_country ? flag(p.birth_country) + " " : ""}${esc([p.birth_city, cname(p.birth_country)].filter(Boolean).join(", ") || "—")}</b></span>
           <span>${t("debut")}: <b>${esc(p.mlb_debut_date || "—")}</b></span></div>
-        ${any ? `<div class="kv"><span>${t("seasonTeam")} ${S.season} (${t(S.type)}): <b>${esc(team)}</b></span>${any.teams_played > 1 ? `<span>${t("playedFor").replace("{n}", any.teams_played)}</span>` : ""}</div>` : ""}
+        ${any ? `<div class="kv"><span class="pc">${t("seasonTeam")} ${S.season} (${t(S.type)}): ${logo(any.team_id, 22)}<b>${esc(team)}</b></span>${any.teams_played > 1 ? `<span>${t("playedFor").replace("{n}", any.teams_played)}</span>` : ""}</div>` : ""}
       </div></section>
     ${b && !isPitcher ? batBlock(b) : ""}${q ? pitBlock(q) : ""}${b && isPitcher ? batBlock(b) : ""}
     ${!b && !q ? `<p class="empty">${t("noLine")}</p>` : ""}
@@ -387,8 +396,8 @@ function viewPlayer() {
       ${blog.length && !isPitcher ? `<div class="panel"><h3>${t("gameLog")}</h3>${table([{ h: t("date"), l: 1, v: g => g.game_day }, { h: t("opp"), l: 1, v: g => abbr(g.opponent_id) }, { h: "AB", v: g => g.ab }, { h: "H", v: g => g.h }, { h: "HR", v: g => g.hr }, { h: "RBI", v: g => g.rbi }, { h: "OPS 15", v: g => f3(g.ops_last_15) }, { h: "OPS", v: g => f3(g.ops_season_to_date) }], blog.slice(-12).reverse())}</div>` : ""}
       ${plog.length && isPitcher ? `<div class="panel"><h3>${t("gameLog")}</h3>${table([{ h: t("date"), l: 1, v: g => g.game_day }, { h: t("opp"), l: 1, v: g => abbr(g.opponent_id) }, { h: "IP", v: g => g.innings_pitched_display }, { h: "ER", v: g => g.er }, { h: "SO", v: g => g.so }, { h: "Dec", v: g => esc(g.decision || "") }, { h: "ERA 5", v: g => f2(g.era_last_5) }, { h: "ERA", v: g => f2(g.era_season_to_date) }], plog.slice(-12).reverse())}</div>` : ""}
       <div class="panel"><h3>${t("career")}</h3>
-        ${bat.length ? table([{ h: t("season"), l: 1, v: x => `${x.season}${x.season_type === "Postseason" ? " PS" : ""}` }, { h: "TM", v: x => abbr(x.team_id) }, { h: "G", v: x => x.games }, { h: "PA", v: x => x.pa }, { h: "AVG", v: x => f3(x.avg) }, { h: "OBP", v: x => f3(x.obp) }, { h: "SLG", v: x => f3(x.slg) }, { h: "OPS", v: x => f3(x.ops) }, { h: "HR", v: x => x.hr }, { h: "RBI", v: x => x.rbi }], bat.slice().sort((a, b) => a.season - b.season || a.season_type.localeCompare(b.season_type)).reverse()) : ""}
-        ${pit.length ? table([{ h: t("season"), l: 1, v: x => `${x.season}${x.season_type === "Postseason" ? " PS" : ""}` }, { h: "TM", v: x => abbr(x.team_id) }, { h: "G", v: x => x.games }, { h: "GS", v: x => x.games_started }, { h: "IP", v: x => x.ip_display }, { h: "ERA", v: x => f2(x.era) }, { h: "WHIP", v: x => f2(x.whip) }, { h: "SO", v: x => x.so }, { h: "W-L", v: x => `${x.w}-${x.l}` }, { h: "SV", v: x => x.sv }], pit.slice().sort((a, b) => a.season - b.season || a.season_type.localeCompare(b.season_type)).reverse()) : ""}
+        ${bat.length ? table([{ h: t("season"), l: 1, v: x => `${x.season}${x.season_type === "Postseason" ? " PS" : ""}` }, { h: "TM", l: 1, v: x => tcell(x.team_id) }, { h: "G", v: x => x.games }, { h: "PA", v: x => x.pa }, { h: "AVG", v: x => f3(x.avg) }, { h: "OBP", v: x => f3(x.obp) }, { h: "SLG", v: x => f3(x.slg) }, { h: "OPS", v: x => f3(x.ops) }, { h: "HR", v: x => x.hr }, { h: "RBI", v: x => x.rbi }], bat.slice().sort((a, b) => a.season - b.season || a.season_type.localeCompare(b.season_type)).reverse()) : ""}
+        ${pit.length ? table([{ h: t("season"), l: 1, v: x => `${x.season}${x.season_type === "Postseason" ? " PS" : ""}` }, { h: "TM", l: 1, v: x => tcell(x.team_id) }, { h: "G", v: x => x.games }, { h: "GS", v: x => x.games_started }, { h: "IP", v: x => x.ip_display }, { h: "ERA", v: x => f2(x.era) }, { h: "WHIP", v: x => f2(x.whip) }, { h: "SO", v: x => x.so }, { h: "W-L", v: x => `${x.w}-${x.l}` }, { h: "SV", v: x => x.sv }], pit.slice().sort((a, b) => a.season - b.season || a.season_type.localeCompare(b.season_type)).reverse()) : ""}
       </div>
     </div>`);
   const input = document.getElementById("f-q");
@@ -440,7 +449,7 @@ function viewH2H() {
     <div class="panel"><h3>${t("meetings")}</h3>${table([
       { h: t("date"), l: 1, v: g => g.official_date }, { h: "", l: 1, v: g => `<span class="chip">${g.season_type === "Postseason" ? esc(g.series_description || "PS") : g.season}</span>` },
       { h: t("score"), l: 1, v: g => { const w = g.home_score > g.away_score ? g.home_team_id : g.away_team_id; return `<span class="pill ${w === S.team ? "w" : "l"}">${abbr(g.away_team_id)} ${g.away_score} @ ${abbr(g.home_team_id)} ${g.home_score}${g.innings_played > 9 ? ` (${g.innings_played})` : ""}</span>`; } },
-      { h: t("wp"), l: 1, v: g => esc(pname(g.winning_pitcher_id)) }, { h: t("venue"), l: 1, v: g => esc(g.venue_name) }], games, { empty: t("noMeet") })}</div>`);
+      { h: t("wp"), l: 1, v: g => g.winning_pitcher_id ? pcell(g.winning_pitcher_id) : "—" }, { h: t("venue"), l: 1, v: g => esc(g.venue_name) }], games, { empty: t("noMeet") })}</div>`);
   document.getElementById("f-t1").onchange = e => { S.team = Number(e.target.value); render(); };
   document.getElementById("f-t2").onchange = e => { S.team2 = Number(e.target.value); render(); };
 }
@@ -452,7 +461,7 @@ function viewLeaders() {
   const qb = reg ? bat.filter(b => b.is_qualified) : bat.filter(b => b.pa >= 15);
   const qp = reg ? pit.filter(p => p.is_qualified) : pit.filter(p => p.outs >= 15);
   const top = (rows, key, desc = true, n = 10) => rows.filter(r => r[key] != null).sort((a, b) => desc ? b[key] - a[key] : a[key] - b[key]).slice(0, n);
-  const board = (title, rows, key, fmt, note) => `<div class="panel"><h3>${title}${note ? ` <span class="note">· ${note}</span>` : ""}</h3>${table([{ h: "#", v: (r) => rows.indexOf(r) + 1 }, { h: t("player"), l: 1, cls: () => "name", v: r => esc(pname(r.player_id)) }, { h: "TM", l: 1, v: r => abbr(r.team_id) }, { h: title.split(" ")[0], v: r => fmt(r[key]) }], rows, { click: r => r.player_id })}</div>`;
+  const board = (title, rows, key, fmt, note) => `<div class="panel"><h3>${title}${note ? ` <span class="note">· ${note}</span>` : ""}</h3>${table([{ h: "#", v: (r) => rows.indexOf(r) + 1 }, { h: t("player"), l: 1, cls: () => "name", v: r => pcell(r.player_id) }, { h: "TM", l: 1, v: r => tcell(r.team_id) }, { h: title.split(" ")[0], v: r => fmt(r[key]) }], rows, { click: r => r.player_id })}</div>`;
   const qnote = reg ? t("qualified") : `${t("minPA")} 15 PA / 5 IP`;
   view(`
     <section><h2>${t("leaders")} · ${S.season}</h2><p class="lede">${t("leadersLede")}</p></section>
@@ -502,12 +511,12 @@ function viewDR() {
     <div class="stats">${stat(t("ctryPlayers"), n0(sel.players), `${t("rankCountry")}: #${sel.country_rank_by_players ?? "—"}`)}${stat(t("pctPlayers"), f1(sel.pct_of_players) + "%", `${n0(sel.hitters)} ${t("hitters").toLowerCase()} · ${n0(sel.pitchers)} ${t("pitchers").toLowerCase()}`)}${stat(t("pctHR"), f1(sel.pct_of_home_runs) + "%", `${n0(sel.hr)} HR`)}${stat(t("pctSO"), f1(sel.pct_of_strikeouts) + "%", `${n0(sel.pitcher_strikeouts)} SO`)}${stat("ERA", f2(sel.era), `${n0(sel.pitcher_wins)} W · ${n0(sel.saves)} SV`)}</div>
     <div class="grid wide">
       <div class="panel"><h3>${t("byCountry")}</h3><div class="chart"><canvas id="c-ctry"></canvas></div></div>
-      <div class="panel"><h3>${t("latest")}${lastDay ? ` · ${lastDay.official_date}` : ""}</h3>${table([{ h: t("player"), l: 1, cls: () => "name", v: r => esc(r.player_name) }, { h: "TM", l: 1, v: r => `${esc(r.team_abbreviation)} ${t("vs")} ${esc(r.opponent)}` }, { h: "POS", l: 1, v: r => esc(r.position) }, { h: t("line"), l: 1, v: r => esc(r.line) }], latest, { click: r => "p:" + r.player_id, empty: t("noLatest") })}</div>
+      <div class="panel"><h3>${t("latest")}${lastDay ? ` · ${lastDay.official_date}` : ""}</h3>${table([{ h: t("player"), l: 1, cls: () => "name", v: r => pcell(r.player_id) }, { h: "TM", l: 1, v: r => `${esc(r.team_abbreviation)} ${t("vs")} ${esc(r.opponent)}` }, { h: "POS", l: 1, v: r => esc(r.position) }, { h: t("line"), l: 1, v: r => esc(r.line) }], latest, { click: r => "p:" + r.player_id, empty: t("noLatest") })}</div>
     </div>
     <section><h3>${t("stars")} · ${flag(S.country)} ${esc(cname(S.country))} · ${S.season}</h3>${stars.length ? `<div class="stars">${stars.map(st => `<div class="star" data-p="${st.r.player_id}" role="button" tabindex="0">${shot(st.r.player_id, pname(st.r.player_id))}<div class="who"><span class="cat">${st.cat}</span><span class="nm2">${esc(pname(st.r.player_id))}</span><span class="note">${logo(st.r.team_id, 18)} ${abbr(st.r.team_id)}</span></div><span class="num" style="margin-left:auto">${st.val}</span></div>`).join("")}</div>` : `<p class="empty">${t("noLine")}</p>`}</section>
     <div class="grid wide">
-      <div class="panel"><h3>${t("hrBy")}</h3><div class="tall">${table([{ h: "#", v: r => hrRows.indexOf(r) + 1 }, { h: t("player"), l: 1, cls: () => "name", v: b => esc(pname(b.player_id)) }, { h: "TM", l: 1, v: b => abbr(b.team_id) }, { h: "HR", v: b => `<b>${b.hr}</b>` }, { h: "PA", v: b => b.pa }, { h: t("abPerHr"), v: b => b.hr ? f1(b.ab / b.hr) : "—" }, { h: "AVG", v: b => f3(b.avg) }, { h: "OPS", v: b => f3(b.ops) }, { h: "RBI", v: b => b.rbi }], hrRows, { click: b => "p:" + b.player_id })}</div></div>
-      <div class="panel"><h3>${t("soBy")}</h3><div class="tall">${table([{ h: "#", v: r => soRows.indexOf(r) + 1 }, { h: t("player"), l: 1, cls: () => "name", v: p => esc(pname(p.player_id)) }, { h: "TM", l: 1, v: p => abbr(p.team_id) }, { h: "SO", v: p => `<b>${p.so}</b>` }, { h: "IP", v: p => p.ip_display }, { h: "K/9", v: p => f2(p.k_per_9) }, { h: "ERA", v: p => f2(p.era) }, { h: "W-L", v: p => `${p.w}-${p.l}` }, { h: "SV", v: p => p.sv }], soRows, { click: p => "p:" + p.player_id })}</div></div>
+      <div class="panel"><h3>${t("hrBy")}</h3><div class="tall">${table([{ h: "#", v: r => hrRows.indexOf(r) + 1 }, { h: t("player"), l: 1, cls: () => "name", v: b => pcell(b.player_id) }, { h: "TM", l: 1, v: b => tcell(b.team_id) }, { h: "HR", v: b => `<b>${b.hr}</b>` }, { h: "PA", v: b => b.pa }, { h: t("abPerHr"), v: b => b.hr ? f1(b.ab / b.hr) : "—" }, { h: "AVG", v: b => f3(b.avg) }, { h: "OPS", v: b => f3(b.ops) }, { h: "RBI", v: b => b.rbi }], hrRows, { click: b => "p:" + b.player_id })}</div></div>
+      <div class="panel"><h3>${t("soBy")}</h3><div class="tall">${table([{ h: "#", v: r => soRows.indexOf(r) + 1 }, { h: t("player"), l: 1, cls: () => "name", v: p => pcell(p.player_id) }, { h: "TM", l: 1, v: p => tcell(p.team_id) }, { h: "SO", v: p => `<b>${p.so}</b>` }, { h: "IP", v: p => p.ip_display }, { h: "K/9", v: p => f2(p.k_per_9) }, { h: "ERA", v: p => f2(p.era) }, { h: "W-L", v: p => `${p.w}-${p.l}` }, { h: "SV", v: p => p.sv }], soRows, { click: p => "p:" + p.player_id })}</div></div>
     </div>
     <div class="grid wide">
       <div class="panel"><h3>${t("trend")} · ${esc(cname(S.country))}</h3><div class="chart"><canvas id="c-trend"></canvas></div></div>
