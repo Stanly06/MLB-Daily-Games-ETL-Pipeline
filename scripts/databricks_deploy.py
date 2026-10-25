@@ -6,14 +6,16 @@
    `resources/jobs/mlb_performance_daily.job.json`, pointing every task at that Git folder.
 3. Prints the status of the latest daily-job runs.
 
-It never starts a backfill. Environment: DATABRICKS_HOST, DATABRICKS_TOKEN (repository secrets),
-optional MLB_GIT_FOLDER_NAME (default: MLB-Daily-Games-ETL-Pipeline).
+It starts a backfill only if the daily job has never succeeded. Environment: DATABRICKS_HOST, DATABRICKS_TOKEN
+(repository secrets), optional MLB_GIT_FOLDER_NAME (default: MLB-Daily-Games-ETL-Pipeline) and MLB_RUN_ONLY
+(comma-separated task keys to run right away and wait for, e.g. `web_platform_export` after changing the export).
 
     python scripts/databricks_deploy.py
 """
 import json
 import os
 import sys
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -121,6 +123,24 @@ def main():
                 print(f"    error: {(out.get('error') or '')[:600]}")
                 print(f"    trace: {(out.get('error_trace') or '')[-1500:]}")
 
+
+    # 6. Optional: run only some tasks now (e.g. the web export after a change) and wait for the result
+    only = [x.strip() for x in os.environ.get("MLB_RUN_ONLY", "").split(",") if x.strip()]
+    if only:
+        if active:
+            sys.exit(f"::error::A run is in progress ({active[0]['run_id']}); not starting {only}")
+        run_id = api("POST", "/api/2.2/jobs/run-now", {"job_id": ids[daily["name"]], "only": only})["run_id"]
+        print(f"\nStarted {only}: {HOST}/jobs/{ids[daily['name']]}/runs/{run_id}")
+        for _ in range(90):  # up to 30 minutes
+            time.sleep(20)
+            st = api("GET", "/api/2.2/jobs/runs/get", query={"run_id": run_id}).get("state", {})
+            if st.get("life_cycle_state") in ("TERMINATED", "SKIPPED", "INTERNAL_ERROR"):
+                print(f"Run {run_id}: {st.get('life_cycle_state')} {st.get('result_state', '')} {st.get('state_message', '')[:300]}")
+                if st.get("result_state") != "SUCCESS":
+                    sys.exit(1)
+                break
+        else:
+            sys.exit(f"::error::Run {run_id} did not finish in 30 minutes")
 
 if __name__ == "__main__":
     main()

@@ -112,6 +112,24 @@ K−BB%, bullpen ERA and 3-day workload, rest days; plus park factor (previous s
 | CAL-001 | Season calendar | Every game by date, with result or probable starters and the model's pick | `fact_game` (completed and upcoming) |
 | CAL-002 | Opponents | Games, home and away games and first date against each opponent for a team and season | web platform (from `fact_game`) |
 
+## 7c. League executive view — export `team_batting`, `team_pitching`, `league_monthly` (web League page)
+
+Built from the Silver game grain (`fact_batting_game`, `fact_pitching_game`, `fact_team_game`), so a traded player
+counts for the team he played for that day (the player-season tables assign a traded player's whole season to his
+last team and must not be summed by team). Only completed games. The export carries raw counting stats; every rate
+is computed from summed numerators and denominators, never as an average of team or player rates.
+
+| ID | KPI | Formula | Notes |
+|---|---|---|---|
+| LG-005 | Runs / HR per team game | R ÷ team games; HR ÷ team games | MLB convention (each game counts once per team); the per-game value with both teams is shown as secondary |
+| LG-006 | League AVG / OBP / SLG / OPS | H ÷ AB; (H + BB + HBP) ÷ (AB + BB + HBP + SF); TB ÷ AB; OBP + SLG | From league totals. 2024 = .243 / .312 / .399 / .711, equal to MLB's published values |
+| LG-007 | League ERA / WHIP | 27 × ER ÷ outs; 3 × (BB + H) ÷ outs | IP = outs ÷ 3 (display `1450.2` = 1450⅔) |
+| LG-008 | Change vs previous season | (current − previous) ÷ previous | Only for the same season type; counting stats only when both seasons have a comparable number of games (± 2 %) |
+| LG-009 | Monthly offensive trend | Any of R/G, HR/G, AVG, OBP, SLG, OPS, SO/G, BB/G by month and league (batting team's league) | March grouped with April, October with September (regular season) |
+| TEAM-014 | Team offense | G, R, R/G, HR, AVG, OBP, SLG, OPS, ISO = SLG − AVG | Batting matches MLB official team stats for all 90 team-seasons 2024–2026 |
+| TEAM-015 | Team pitching | ERA, WHIP, SO, K/9, BB/9, HR/9 = 27 × stat ÷ outs | ER is the sum of pitchers' earned runs; MLB's team ERA uses team earned runs, 1–4 fewer per season for some teams (≤ 0.03 ERA) |
+| TEAM-016 | Team FIP | (13·HR + 3·(BB + HBP) − 2·SO) ÷ IP + cFIP | cFIP = league ERA − league FIP without constant, per season and type (same constant as PIT-006); league FIP equals league ERA by construction, so it is not shown as a league KPI |
+
 ## 7. League and operations KPIs — `gold.league_daily_summary`, `metadata`, `quality`
 
 | ID | KPI | Definition | Object |

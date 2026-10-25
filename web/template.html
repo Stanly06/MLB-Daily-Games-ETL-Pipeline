@@ -1,3 +1,5 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>MLB Performance Intelligence</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -147,6 +149,22 @@ td .logo { margin-right: 6px; }
 .empty { color: var(--muted); padding: 18px 0; }
 footer { color: var(--muted); font-size: 12px; padding-block: 0 32px; }
 @media (max-width: 560px) { .shot { width: 104px; } .profile .nm { font-size: 30px; } h2 { font-size: 24px; } .stat .v { font-size: 26px; } }
+/* League executive view */
+.lg-sec { display: grid; gap: 10px; }
+.lg-h { font-family: var(--f-display); font-size: 22px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; color: var(--ink); margin: 6px 0 0; padding-left: 10px; border-left: 4px solid var(--accent); }
+.lg-k { margin: 2px 0 -4px; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.lg-i { font-size: 10px; opacity: .7; }
+.lg-ctl { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; margin-bottom: 8px; }
+.lg-split { display: grid; gap: 16px; grid-template-columns: minmax(0, 340px) minmax(0, 1fr); align-items: start; }
+.lg-split .chart { height: auto; }
+.lg-t th.sel, .lg-t td.sel { background: color-mix(in srgb, var(--accent) 8%, transparent); color: var(--ink); font-weight: 600; }
+.lg-t tfoot td { font-weight: 600; border-top: 2px solid var(--line); border-bottom: 0; }
+.thb { all: unset; cursor: pointer; text-decoration: underline dotted; text-underline-offset: 3px; }
+.thb:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+details.defs summary { cursor: pointer; font-size: 12.5px; color: var(--muted); }
+details.defs dl { display: grid; grid-template-columns: max-content 1fr; gap: 4px 14px; margin: 10px 0 4px; font-size: 12.5px; }
+details.defs dt { font-weight: 600; } details.defs dd { margin: 0; color: var(--muted); }
+@media (max-width: 860px) { .lg-split { grid-template-columns: minmax(0, 1fr); } }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
 </style>
 
@@ -208,6 +226,7 @@ const I = {
     check:"Control", sev:"Severidad", status:"Estado", failed:"Fallidos", checked:"Revisados", rankCountry:"Lugar por cantidad de jugadores",
     teamLede:"Récord, splits y evolución juego a juego.", playerLede:"Línea de temporada, ranking en la liga y forma reciente.",
     h2hLede:"Récord directo entre dos equipos y cada juego en que se enfrentaron.", leadersLede:"Líderes de la liga. Promedios y efectividad entre jugadores calificados.",
+    lgLede:"Panorama de toda la MLB: indicadores de la liga, tendencias ofensivas, rankings de ofensiva y pitcheo por equipo, equilibrio competitivo y posiciones por división.", lgKpi:"Indicadores de la liga", lgPrimary:"Principales", lgAdvanced:"Avanzados", totalRuns:"Carreras", rpg:"Carreras por equipo", hrpg:"Jonrones por equipo", bothTeams:"{v} por juego (ambos equipos)", lgVs:"vs {s}", lgNoPrev:"Sin temporada anterior para comparar", defs:"Cómo se calcula cada indicador", lgTrends:"Tendencias ofensivas", lgTrendsLede:"Evolución mes a mes por juego de equipo. Marzo se agrupa con abril y octubre con septiembre porque tienen muy pocos juegos.", lgTrendsPost:"La postemporada se juega casi entera en octubre, así que se compara temporada por temporada.", cmpPrev:"Comparar con {s}", onlyS:"Solo {s}", allMLB:"Toda MLB", lgPerf:"Rendimiento por equipo", offRank:"Ranking ofensivo", pitRank:"Pitcheo por equipo", offRankLede:"Los equipos ordenados por la métrica elegida; toca un encabezado de la tabla para cambiarla.", pitRankLede:"Menor es mejor en ERA, WHIP, BB/9, HR/9 y FIP; mayor es mejor en SO y K/9.", lgAvgLine:"Línea punteada: {l} ({v}).", better:"Verde: mejor que el promedio; rojo: peor.", competitive:"Análisis competitivo", pending:"Esta sección estará disponible después de la próxima actualización diaria de datos.", teamGames:"juegos de equipo", smallSample:"Postemporada: pocos juegos por equipo, interpreta los rankings con cautela.", eraNote:"ERA y FIP usan la suma de las carreras limpias de cada lanzador; MLB calcula el ERA de equipo con las carreras limpias del equipo, que pueden ser hasta 4 menos por temporada (≤ 0.03 de ERA).", ipNote:"IP = outs ÷ 3; 1450.2 significa 1450⅔ innings.", m_rpg:"Carreras/juego", m_hrpg:"HR/juego", m_sopg:"Ponches/juego", m_bbpg:"Bases por bolas/juego", m_avg:"AVG", m_obp:"OBP", m_slg:"SLG", m_ops:"OPS", m_iso:"ISO", m_r:"Carreras", m_hr:"Jonrones", m_so:"Ponches", m_era:"ERA", m_whip:"WHIP", m_k9:"K/9", m_bb9:"BB/9", m_hr9:"HR/9", m_fip:"FIP", tip_games:"Juegos completados en la temporada y el tipo seleccionados.", tip_runs:"Carreras anotadas por todos los equipos.", tip_rpg:"Carreras ÷ juegos de equipo (cada juego cuenta una vez por equipo), como lo publica MLB.", tip_hr:"Jonrones de todos los equipos.", tip_hrpg:"Jonrones ÷ juegos de equipo.", tip_att:"Asistencia promedio por juego, ponderada por el número de juegos de cada día.", tip_mk:"Juegos que se jugaron en otra fecha tras un aplazamiento.", tip_avg:"Hits ÷ turnos al bate, con los totales de toda la liga.", tip_obp:"(H + BB + HBP) ÷ (AB + BB + HBP + SF), con totales.", tip_slg:"Bases totales ÷ turnos al bate, con totales.", tip_ops:"OBP + SLG, cada uno calculado con los totales de la liga (no es un promedio de los OPS de los equipos).", tip_iso:"SLG − AVG: poder puro.", tip_era:"9 × carreras limpias ÷ innings lanzados.", tip_whip:"(Bases por bolas + hits) ÷ innings lanzados.", tip_k9:"9 × ponches ÷ innings lanzados.", tip_bb9:"9 × bases por bolas ÷ innings lanzados.", tip_hr9:"9 × jonrones permitidos ÷ innings lanzados.", tip_fip:"(13·HR + 3·(BB + HBP) − 2·K) ÷ IP + constante de la temporada (ERA de la liga − FIP sin constante), la misma regla que el FIP de los jugadores.", tip_sopg:"Ponches de los bateadores ÷ juegos de equipo.", tip_bbpg:"Bases por bolas recibidas ÷ juegos de equipo.",
     foot:"Fuente: MLB Stats API (© MLB Advanced Media), procesada en Databricks (Bronze → Silver → Gold). Proyecto de portafolio de Stanly Fernández, sin fines comerciales." },
   en: { season:"Season", type:"Type", "Regular Season":"Regular season", Postseason:"Postseason",
     league:"League", team:"Team", player:"Player", h2h:"Head-to-head", leaders:"Leaders", dr:"Countries", quality:"Quality",
@@ -246,6 +265,7 @@ const I = {
     check:"Check", sev:"Severity", status:"Status", failed:"Failed", checked:"Checked", rankCountry:"Rank by number of players",
     teamLede:"Record, splits and game-by-game trajectory.", playerLede:"Season line, league rank and recent form.",
     h2hLede:"Head-to-head record between two teams and every game they played.", leadersLede:"League leaders. Rate stats among qualified players.",
+    lgLede:"All of MLB at a glance: league indicators, offensive trends, team offense and pitching rankings, competitive balance and division standings.", lgKpi:"League indicators", lgPrimary:"Primary", lgAdvanced:"Advanced", totalRuns:"Runs", rpg:"Runs per team game", hrpg:"HR per team game", bothTeams:"{v} per game (both teams)", lgVs:"vs {s}", lgNoPrev:"No previous season to compare", defs:"How each indicator is calculated", lgTrends:"Offensive trends", lgTrendsLede:"Month by month, per team game. March is grouped with April and October with September because they have very few games.", lgTrendsPost:"The postseason is played almost entirely in October, so it is compared season by season.", cmpPrev:"Compare with {s}", onlyS:"{s} only", allMLB:"All MLB", lgPerf:"Team performance", offRank:"Offensive rankings", pitRank:"Team pitching", offRankLede:"Teams ranked by the selected metric; tap a table header to change it.", pitRankLede:"Lower is better for ERA, WHIP, BB/9, HR/9 and FIP; higher is better for SO and K/9.", lgAvgLine:"Dashed line: {l} ({v}).", better:"Green: better than average; red: worse.", competitive:"Competitive analysis", pending:"This section will be available after the next daily data refresh.", teamGames:"team games", smallSample:"Postseason: few games per team, read the rankings with caution.", eraNote:"ERA and FIP use the sum of each pitcher's earned runs; MLB computes team ERA with team earned runs, which can be up to 4 fewer per season (≤ 0.03 ERA).", ipNote:"IP = outs ÷ 3; 1450.2 means 1450⅔ innings.", m_rpg:"Runs/game", m_hrpg:"HR/game", m_sopg:"Strikeouts/game", m_bbpg:"Walks/game", m_avg:"AVG", m_obp:"OBP", m_slg:"SLG", m_ops:"OPS", m_iso:"ISO", m_r:"Runs", m_hr:"Home runs", m_so:"Strikeouts", m_era:"ERA", m_whip:"WHIP", m_k9:"K/9", m_bb9:"BB/9", m_hr9:"HR/9", m_fip:"FIP", tip_games:"Completed games in the selected season and type.", tip_runs:"Runs scored by all teams.", tip_rpg:"Runs ÷ team games (each game counts once per team), as MLB publishes it.", tip_hr:"Home runs by all teams.", tip_hrpg:"Home runs ÷ team games.", tip_att:"Average attendance per game, weighted by the number of games each day.", tip_mk:"Games played on another date after a postponement.", tip_avg:"Hits ÷ at-bats, using league totals.", tip_obp:"(H + BB + HBP) ÷ (AB + BB + HBP + SF), using totals.", tip_slg:"Total bases ÷ at-bats, using totals.", tip_ops:"OBP + SLG, each from league totals (not an average of team OPS).", tip_iso:"SLG − AVG: raw power.", tip_era:"9 × earned runs ÷ innings pitched.", tip_whip:"(Walks + hits) ÷ innings pitched.", tip_k9:"9 × strikeouts ÷ innings pitched.", tip_bb9:"9 × walks ÷ innings pitched.", tip_hr9:"9 × home runs allowed ÷ innings pitched.", tip_fip:"(13·HR + 3·(BB + HBP) − 2·K) ÷ IP + season constant (league ERA − FIP without constant), the same rule as player FIP.", tip_sopg:"Batter strikeouts ÷ team games.", tip_bbpg:"Walks drawn ÷ team games.",
     foot:"Source: MLB Stats API (© MLB Advanced Media), processed on Databricks (Bronze → Silver → Gold). Non-commercial portfolio project by Stanly Fernández." },
 };
 let lang = "es";
@@ -343,15 +363,165 @@ function chart(id, cfg) {
 }
 
 // ---------- views ----------
+// ---------- League: executive view ----------
+// Every league or team rate is computed from summed numerators and denominators, never as an average of rates.
+// Team counting stats come from the export's team_batting / team_pitching tables (Silver game grain, so a traded
+// player counts for the team he played for that day). League totals fall back to the player-season tables, which
+// give identical league sums, when those tables are not in the export yet.
+const LG = { trend: "rpg", trendLg: "", cmp: true, sub: "off", offM: "ops", offLg: "", pitM: "era", pitLg: "" };
+const hasT = k => !!(RAW[k] && RAW[k].rows && RAW[k].rows.length);
+const sumBy = (rows, keys) => { const o = {}; keys.forEach(k => { o[k] = rows.reduce((a, r) => a + (r[k] || 0), 0); }); return o; };
+const div0 = (a, b) => (b ? a / b : null);
+const BAT_K = ["g", "r", "pa", "ab", "h", "doubles", "triples", "hr", "bb", "hbp", "sf", "so", "tb", "sb"];
+const PIT_K = ["g", "outs", "h", "r", "er", "bb", "hbp", "so", "hr"];
+const batRates = s => {
+  const avg = div0(s.h, s.ab), obp = div0(s.h + s.bb + s.hbp, s.ab + s.bb + s.hbp + s.sf), slg = div0(s.tb, s.ab);
+  return Object.assign({}, s, { rpg: div0(s.r, s.g), hrpg: div0(s.hr, s.g), sopg: div0(s.so, s.g), bbpg: div0(s.bb, s.g), avg, obp, slg,
+    ops: obp == null || slg == null ? null : obp + slg, iso: slg == null || avg == null ? null : slg - avg });
+};
+const rawFip = s => div0(13 * s.hr + 3 * (s.bb + s.hbp) - 2 * s.so, s.outs / 3);
+const pitRates = (s, cfip) => Object.assign({}, s, { era: div0(27 * s.er, s.outs), whip: div0(3 * (s.h + s.bb), s.outs),
+  k9: div0(27 * s.so, s.outs), bb9: div0(27 * s.bb, s.outs), hr9: div0(27 * s.hr, s.outs),
+  fip: cfip == null || !s.outs ? null : rawFip(s) + cfip });
+const teamGames = (season, type) => tbl("team_seasons").filter(r => r.season === season && r.season_type === type).reduce((a, r) => a + (r.games || 0), 0);
+const lgOf = (name, season, type) => (hasT(name) ? tbl(name).filter(r => r.season === season && r.season_type === type) : []);
+function leagueBat(season, type) {
+  const tb = lgOf("team_batting", season, type);
+  if (tb.length) return batRates(sumBy(tb, BAT_K));
+  const rows = tbl("batting").filter(r => r.season === season && r.season_type === type);
+  if (!rows.length) return null;
+  const s = sumBy(rows, BAT_K.slice(1)); s.g = teamGames(season, type); return batRates(s);
+}
+function leaguePit(season, type) {
+  const tp = lgOf("team_pitching", season, type);
+  const rows = tp.length ? tp : tbl("pitching").filter(r => r.season === season && r.season_type === type);
+  if (!rows.length) return null;
+  const s = sumBy(rows, PIT_K); if (!tp.length) s.g = teamGames(season, type);
+  // FIP constant of the season = league ERA − league FIP without constant (same rule as gold.player_season_pitching)
+  const cfip = s.outs ? 27 * s.er / s.outs - rawFip(s) : null;
+  return Object.assign(pitRates(s, cfip), { cfip });
+}
+const FMT = { rpg: f2, hrpg: f2, sopg: f2, bbpg: f2, avg: f3, obp: f3, slg: f3, ops: f3, iso: f3, r: n0, hr: n0, so: n0,
+  era: f2, whip: f2, k9: f2, bb9: f2, hr9: f2, fip: f2 };
+const LOWER_BETTER = new Set(["era", "whip", "bb9", "hr9", "fip"]);
+const ipDisp = outs => `${Math.floor(outs / 3)}.${outs % 3}`;
+const lgName = l => (l ? l : "MLB");
+
+function lgSeg(id, items, cur) {
+  return `<div class="seg" id="${id}" role="group">${items.map(([k, l]) => `<button type="button" data-k="${k}" aria-pressed="${String(cur) === String(k)}">${l}</button>`).join("")}</div>`;
+}
+function lgStat(k, v, sub, tip, sub2) {
+  return `<div class="stat" title="${esc(tip)}"><span class="k">${k} <span class="lg-i" aria-hidden="true">ⓘ</span></span><span class="v">${v}</span><span class="s">${sub || "&nbsp;"}</span>${sub2 ? `<span class="s">${sub2}</span>` : ""}</div>`;
+}
+// Variation vs the previous season: only when both values exist; counting stats only when both seasons have a
+// comparable number of games (within 2 %), so a season in progress is never compared with a complete one.
+function lgDelta(cur, prev, prevSeason, comparable = true) {
+  if (!comparable || cur == null || prev == null || !prev) return "";
+  const p = (cur - prev) / Math.abs(prev) * 100;
+  const arrow = Math.abs(p) < 0.05 ? "=" : p > 0 ? "▲" : "▼";
+  return `${arrow} ${Math.abs(p).toFixed(1)} % ${t("lgVs").replace("{s}", prevSeason)}`;
+}
+function lgDaily(season, type) {
+  const d = tbl("daily").filter(r => r.season === season && r.season_type === type);
+  const games = d.reduce((a, r) => a + (r.completed_games || 0), 0);
+  const att = d.filter(r => r.avg_attendance).map(r => [r.avg_attendance, r.completed_games]);
+  return { games, runs: d.reduce((a, r) => a + (r.total_runs || 0), 0), hr: d.reduce((a, r) => a + (r.home_runs || 0), 0),
+    att: att.length ? att.reduce((a, [v, w]) => a + v * w, 0) / att.reduce((a, [, w]) => a + w, 0) : null,
+    makeups: d.reduce((a, r) => a + (r.makeup_games || 0), 0) };
+}
+const MON_K = ["team_games", "r", "pa", "ab", "h", "hr", "bb", "hbp", "sf", "so", "tb"];
+// Regular season: March (opening series) is grouped with April and early-October games with September.
+const monKey = (m, type) => { const mm = m.slice(5); return type === "Regular Season" ? (mm === "03" ? "04" : mm === "10" ? "09" : mm) : mm; };
+function monthly(season, type, lg) {
+  const by = new Map();
+  lgOf("league_monthly", season, type).filter(r => !lg || r.league === lg).forEach(r => {
+    const k = monKey(r.month, type), a = by.get(k) || {};
+    MON_K.forEach(x => { a[x] = (a[x] || 0) + (r[x] || 0); }); by.set(k, a);
+  });
+  return new Map([...by].sort().map(([k, s]) => [k, batRates(Object.assign({ g: s.team_games }, s))]));
+}
+const monLabel = k => {
+  const nm = m => new Date(`2026-${m}-15T12:00:00Z`).toLocaleDateString(lang === "es" ? "es-DO" : "en-US", { month: "short", timeZone: "UTC" }).replace(".", "");
+  return k === "04" ? `${nm("03")}–${nm("04")}` : k === "09" ? `${nm("09")}–${nm("10")}` : nm(k);
+};
+// Dashed reference line (league average) on a chart axis
+const refLine = (value, axis) => ({ id: "lgRef", afterDatasetsDraw(c) {
+  if (value == null || !c.scales[axis]) return;
+  const p = c.scales[axis].getPixelForValue(value), a = c.chartArea, ctx = c.ctx;
+  ctx.save(); ctx.strokeStyle = css("--ink"); ctx.globalAlpha = .55; ctx.setLineDash([5, 4]); ctx.lineWidth = 1.2; ctx.beginPath();
+  if (axis === "x") { ctx.moveTo(p, a.top); ctx.lineTo(p, a.bottom); } else { ctx.moveTo(a.left, p); ctx.lineTo(a.right, p); }
+  ctx.stroke(); ctx.restore(); } });
+
 function viewLeague() {
   const ts = teamSeasons();
-  const daily = tbl("daily").filter(r => r.season === S.season && r.season_type === S.type);
-  const games = daily.reduce((a, r) => a + (r.completed_games || 0), 0);
-  const runs = daily.reduce((a, r) => a + (r.total_runs || 0), 0);
-  const hr = daily.reduce((a, r) => a + (r.home_runs || 0), 0);
-  const att = daily.filter(r => r.avg_attendance).map(r => [r.avg_attendance, r.completed_games]);
-  const avgAtt = att.length ? att.reduce((a, [v, w]) => a + v * w, 0) / att.reduce((a, [, w]) => a + w, 0) : null;
-  const makeups = daily.reduce((a, r) => a + (r.makeup_games || 0), 0);
+  const prevSeason = seasons.includes(S.season - 1) ? S.season - 1 : null;
+  const cur = lgDaily(S.season, S.type), prv = prevSeason ? lgDaily(prevSeason, S.type) : null;
+  const countsOk = !!(prv && prv.games && Math.abs(cur.games - prv.games) / prv.games <= 0.02);
+  const bat = leagueBat(S.season, S.type), pit = leaguePit(S.season, S.type);
+  const pbat = prevSeason ? leagueBat(prevSeason, S.type) : null, ppit = prevSeason ? leaguePit(prevSeason, S.type) : null;
+  const tg = 2 * cur.games, ptg = prv ? 2 * prv.games : 0;
+  const d = (a, b, ok = true) => (prevSeason ? lgDelta(a, b, prevSeason, ok) : t("lgNoPrev"));
+  const rpg = div0(cur.runs, tg), hrpg = div0(cur.hr, tg);
+  const primary = [
+    lgStat(t("games"), n0(cur.games), d(cur.games, prv && prv.games, countsOk), t("tip_games")),
+    lgStat(t("totalRuns"), n0(cur.runs), d(cur.runs, prv && prv.runs, countsOk), t("tip_runs")),
+    lgStat(t("rpg"), f2(rpg), d(rpg, prv && div0(prv.runs, ptg)), t("tip_rpg"), t("bothTeams").replace("{v}", f2(div0(cur.runs, cur.games)))),
+    lgStat(t("hr"), n0(cur.hr), d(cur.hr, prv && prv.hr, countsOk), t("tip_hr")),
+    lgStat(t("hrpg"), f2(hrpg), d(hrpg, prv && div0(prv.hr, ptg)), t("tip_hrpg"), t("bothTeams").replace("{v}", f2(div0(cur.hr, cur.games)))),
+    lgStat(t("att"), n0(cur.att), d(cur.att, prv && prv.att), t("tip_att")),
+    lgStat(t("makeups"), n0(cur.makeups), "", t("tip_mk")),
+  ].join("");
+  const adv = [["avg", f3, bat, pbat], ["obp", f3, bat, pbat], ["slg", f3, bat, pbat], ["ops", f3, bat, pbat], ["era", f2, pit, ppit], ["whip", f2, pit, ppit]]
+    .map(([k, f, c, p]) => lgStat(k.toUpperCase(), c ? f(c[k]) : "—", c ? d(c[k], p && p[k]) : "", t("tip_" + k))).join("");
+  const defs = ["rpg", "hrpg", "avg", "obp", "slg", "ops", "iso", "era", "whip", "k9", "bb9", "hr9", "fip"]
+    .map(k => `<dt>${esc(t("m_" + k))}</dt><dd>${esc(t("tip_" + k))}</dd>`).join("");
+
+  // --- trends
+  const tMetrics = ["rpg", "hrpg", "avg", "obp", "slg", "ops", "sopg", "bbpg"];
+  const trendOk = hasT("league_monthly");
+  const trendHtml = !trendOk ? `<p class="empty">${t("pending")}</p>` : `
+    <div class="lg-ctl">${lgSeg("lg-tm", tMetrics.map(k => [k, t("m_" + k)]), LG.trend)}</div>
+    <div class="lg-ctl">${lgSeg("lg-tl", [["", t("allMLB")], ["AL", "AL"], ["NL", "NL"]], LG.trendLg)}
+      ${S.type === "Regular Season" && prevSeason ? lgSeg("lg-tc", [["1", t("cmpPrev").replace("{s}", prevSeason)], ["0", t("onlyS").replace("{s}", S.season)]], LG.cmp ? "1" : "0") : ""}</div>
+    <p class="note">${S.type === "Regular Season" ? t("lgTrendsLede") : t("lgTrendsPost")}</p>
+    <div class="chart"><canvas id="c-trend" aria-label="${t("lgTrends")}"></canvas></div>`;
+
+  // --- offense / pitching rankings
+  const offOk = hasT("team_batting"), pitOk = hasT("team_pitching");
+  const offRows = lgOf("team_batting", S.season, S.type).filter(r => !LG.offLg || leagueOf(r.team_id) === LG.offLg).map(batRates);
+  const lgOff = offRows.length ? batRates(sumBy(offRows, BAT_K)) : null;
+  const pitAll = lgOf("team_pitching", S.season, S.type);
+  const cfip = pit ? pit.cfip : null;
+  const pitRows = pitAll.filter(r => !LG.pitLg || leagueOf(r.team_id) === LG.pitLg).map(r => pitRates(r, cfip));
+  const lgPitF = pitRows.length ? pitRates(sumBy(pitRows, PIT_K), cfip) : null;
+  const oM = LG.offM, pM = LG.pitM;
+  const offSorted = offRows.slice().sort((a, b) => (b[oM] ?? -1e9) - (a[oM] ?? -1e9));
+  const pitSorted = pitRows.slice().sort((a, b) => LOWER_BETTER.has(pM) ? (a[pM] ?? 1e9) - (b[pM] ?? 1e9) : (b[pM] ?? -1e9) - (a[pM] ?? -1e9));
+  const th = (k, label, sel, grp) => `<th class="${sel === k ? "sel" : ""}" ${sel === k ? 'aria-sort="' + (LOWER_BETTER.has(k) ? "ascending" : "descending") + '"' : ""}><button type="button" class="thb" data-${grp}="${k}">${label}</button></th>`;
+  const tdv = (r, k, sel) => `<td class="${sel === k ? "sel" : ""}">${FMT[k](r[k])}</td>`;
+  const offTable = `<div class="tscroll"><table class="lg-t"><thead><tr><th>#</th><th class="l">${t("team")}</th><th>G</th>
+      ${[["r", "R"], ["rpg", "R/G"], ["hr", "HR"], ["avg", "AVG"], ["obp", "OBP"], ["slg", "SLG"], ["ops", "OPS"], ["iso", "ISO"]].map(([k, l]) => th(k, l, oM, "off")).join("")}</tr></thead>
+    <tbody>${offSorted.map((r, i) => `<tr class="click" data-k="${r.team_id}"><td>${i + 1}</td><td class="name l">${tcell(r.team_id)}</td><td>${r.g}</td>${["r", "rpg", "hr", "avg", "obp", "slg", "ops", "iso"].map(k => tdv(r, k, oM)).join("")}</tr>`).join("")}</tbody>
+    ${lgOff ? `<tfoot><tr><td></td><td class="l">${lgName(LG.offLg)}</td><td>${lgOff.g}</td>${["r", "rpg", "hr", "avg", "obp", "slg", "ops", "iso"].map(k => tdv(lgOff, k, oM)).join("")}</tr></tfoot>` : ""}</table></div>`;
+  const pitTable = `<div class="tscroll"><table class="lg-t"><thead><tr><th>#</th><th class="l">${t("team")}</th><th>G</th><th>IP</th>
+      ${[["era", "ERA"], ["whip", "WHIP"], ["so", "SO"], ["k9", "K/9"], ["bb9", "BB/9"], ["hr9", "HR/9"], ["fip", "FIP"]].map(([k, l]) => th(k, l, pM, "pit")).join("")}</tr></thead>
+    <tbody>${pitSorted.map((r, i) => `<tr class="click" data-k="${r.team_id}"><td>${i + 1}</td><td class="name l">${tcell(r.team_id)}</td><td>${r.g}</td><td>${ipDisp(r.outs)}</td>${["era", "whip", "so", "k9", "bb9", "hr9", "fip"].map(k => tdv(r, k, pM)).join("")}</tr>`).join("")}</tbody>
+    ${lgPitF ? `<tfoot><tr><td></td><td class="l">${lgName(LG.pitLg)}</td><td>${lgPitF.g}</td><td>${ipDisp(lgPitF.outs)}</td>${["era", "whip", "so", "k9", "bb9", "hr9", "fip"].map(k => tdv(lgPitF, k, pM)).join("")}</tr></tfoot>` : ""}</table></div>`;
+  const rankH = n => `${Math.max(n, 1) * 21 + 48}px`;
+  const offHtml = !offOk ? `<p class="empty">${t("pending")}</p>` : `
+    <div class="lg-ctl">${lgSeg("lg-om", [["r", "R"], ["rpg", "R/G"], ["hr", "HR"], ["avg", "AVG"], ["obp", "OBP"], ["slg", "SLG"], ["ops", "OPS"], ["iso", "ISO"]], oM)}
+      ${lgSeg("lg-ol", [["", t("allMLB")], ["AL", "AL"], ["NL", "NL"]], LG.offLg)}</div>
+    <p class="note">${t("offRankLede")} ${lgOff ? t("lgAvgLine").replace("{l}", lgName(LG.offLg)).replace("{v}", FMT[oM](lgOff[oM])) : ""}</p>
+    <div class="lg-split"><div class="chart" style="height:${rankH(offSorted.length)}"><canvas id="c-off" aria-label="${t("offRank")}"></canvas></div>${offTable}</div>`;
+  const pitHtml = !pitOk ? `<p class="empty">${t("pending")}</p>` : `
+    <div class="lg-ctl">${lgSeg("lg-pm", [["era", "ERA"], ["whip", "WHIP"], ["so", "SO"], ["k9", "K/9"], ["bb9", "BB/9"], ["hr9", "HR/9"], ["fip", "FIP"]], pM)}
+      ${lgSeg("lg-pl", [["", t("allMLB")], ["AL", "AL"], ["NL", "NL"]], LG.pitLg)}</div>
+    <p class="note">${t("pitRankLede")} ${lgPitF ? t("lgAvgLine").replace("{l}", lgName(LG.pitLg)).replace("{v}", FMT[pM](lgPitF[pM])) : ""} ${t("better")}</p>
+    <div class="lg-split"><div class="chart" style="height:${rankH(pitSorted.length)}"><canvas id="c-pit" aria-label="${t("pitRank")}"></canvas></div>${pitTable}</div>
+    <p class="note">${t("eraNote")} ${t("ipNote")}</p>`;
+  const small = S.type === "Postseason" ? `<p class="disclaimer">${t("smallSample")}</p>` : "";
+
+  // --- existing: competitive analysis + division standings (unchanged)
   const divisions = [...new Set(ts.map(r => r.division_name))].sort();
   const cols = [
     { h: t("team"), l: 1, cls: () => "name", v: r => tcell(r.team_id) },
@@ -363,23 +533,78 @@ function viewLeague() {
     { h: t("streak"), v: r => `<span class="pill ${String(r.current_streak).startsWith("W") ? "w" : "l"}">${esc(r.current_streak)}</span>` },
   ];
   const standings = S.type === "Regular Season"
-    ? divisions.map(d => `<div class="panel"><h3>${esc(d)}</h3>${table(cols, ts.filter(r => r.division_name === d).sort((a, b) => b.win_pct - a.win_pct), { click: r => r.team_id })}</div>`).join("")
+    ? divisions.map(dv => `<div class="panel"><h3>${esc(dv)}</h3>${table(cols, ts.filter(r => r.division_name === dv).sort((a, b) => b.win_pct - a.win_pct), { click: r => r.team_id })}</div>`).join("")
     : `<div class="panel"><h3>${t("standings")}</h3>${table(cols, ts.slice().sort((a, b) => b.wins - a.wins || b.win_pct - a.win_pct), { click: r => r.team_id })}</div>`;
+
   view(`
-    <section><h2>${t("league")} · ${S.season}</h2><p class="lede">${t("leagueLede")}</p></section>
-    <div class="stats">${stat(t("games"), n0(games))}${stat(t("avgRuns"), games ? f2(runs / games) : "—")}${stat(t("hr"), n0(hr), games ? f2(hr / games) + " / G" : "")}${stat(t("att"), n0(avgAtt))}${stat(t("makeups"), n0(makeups))}</div>
+    <section><h2>${t("league")} · ${S.season}</h2><p class="lede">${t("lgLede")}</p></section>
+    <section class="lg-sec"><h3 class="lg-h">${t("lgKpi")}</h3>
+      <p class="lg-k">${t("lgPrimary")}</p><div class="stats">${primary}</div>
+      <p class="lg-k">${t("lgAdvanced")}</p><div class="stats">${adv}</div>
+      <details class="defs"><summary>${t("defs")}</summary><dl>${defs}</dl><p class="note">${t("ipNote")}</p></details></section>
+    <section class="lg-sec"><h3 class="lg-h">${t("lgTrends")}</h3><div class="panel">${trendHtml}</div></section>
+    <section class="lg-sec"><h3 class="lg-h">${t("lgPerf")}</h3>
+      ${lgSeg("lg-sub", [["off", t("offRank")], ["pit", t("pitRank")]], LG.sub)}${small}
+      <div class="panel">${LG.sub === "off" ? offHtml : pitHtml}</div></section>
+    <section class="lg-sec"><h3 class="lg-h">${t("competitive")}</h3>
     <div class="grid wide">
       <div class="panel"><h3>${t("rdVsW")}</h3><div class="chart"><canvas id="c-scatter" aria-label="${t("rdVsW")}"></canvas></div></div>
       <div class="panel"><h3>${t("luck")}</h3><p class="note">${t("luckLede")}</p><div class="chart"><canvas id="c-luck"></canvas></div></div>
-    </div>
-    <div class="grid">${standings}</div>`);
-  const acc = css("--accent"), win = css("--win"), loss = css("--loss");
+    </div></section>
+    <section class="lg-sec"><h3 class="lg-h">${t("standings")}</h3>
+    <div class="grid">${standings}</div></section>`);
+
+  const acc = css("--accent"), win = css("--win"), loss = css("--loss"), muted = css("--muted");
+  // trends chart
+  if (trendOk) {
+    const m = LG.trend, curM = monthly(S.season, S.type, LG.trendLg);
+    if (S.type === "Regular Season") {
+      const prevM = LG.cmp && prevSeason ? monthly(prevSeason, S.type, LG.trendLg) : new Map();
+      const keys = [...new Set([...curM.keys(), ...prevM.keys()])].sort();
+      const ds = [{ label: String(S.season), data: keys.map(k => curM.has(k) ? curM.get(k)[m] : null), g: keys.map(k => curM.has(k) ? curM.get(k).g : null),
+        borderColor: acc, backgroundColor: acc, borderWidth: 2.5, pointRadius: 4, tension: 0, spanGaps: false }];
+      if (prevM.size) ds.push({ label: String(prevSeason), data: keys.map(k => prevM.has(k) ? prevM.get(k)[m] : null), g: keys.map(k => prevM.has(k) ? prevM.get(k).g : null),
+        borderColor: muted, backgroundColor: muted, borderDash: [6, 4], borderWidth: 2, pointRadius: 3, tension: 0 });
+      chart("c-trend", { type: "line", data: { labels: keys.map(monLabel), datasets: ds },
+        options: { interaction: { mode: "index", intersect: false },
+          plugins: { tooltip: { callbacks: { label: c => `${c.dataset.label}: ${FMT[m](c.raw)} ${t("m_" + m)}`, afterLabel: c => `${n0(c.dataset.g[c.dataIndex])} ${t("teamGames")}` } } },
+          scales: { x: {}, y: { title: { display: true, text: `${t("m_" + m)} · ${lgName(LG.trendLg)}` }, ticks: { callback: v => FMT[m](v) } } } } });
+    } else {
+      const ss = seasons.slice().sort((a, b) => a - b).map(se => {
+        const mm = monthly(se, S.type, LG.trendLg); const all = [...mm.values()];
+        return [se, all.length ? batRates(sumBy(all, ["g", ...MON_K.slice(1)])) : null]; }).filter(([, v]) => v);
+      chart("c-trend", { type: "line", data: { labels: ss.map(([se]) => String(se)), datasets: [{ data: ss.map(([, v]) => v[m]), g: ss.map(([, v]) => v.g),
+        showLine: false, pointRadius: 8, pointHoverRadius: 10, pointBackgroundColor: ss.map(([se]) => se === S.season ? acc : muted), pointBorderColor: ss.map(([se]) => se === S.season ? acc : muted) }] },
+        options: { plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => `${FMT[m](c.raw)} ${t("m_" + m)}`, afterLabel: c => `${n0(c.dataset.g[c.dataIndex])} ${t("teamGames")}` } } },
+          scales: { x: { offset: true }, y: { grace: "10%", title: { display: true, text: `${t("m_" + m)} · ${lgName(LG.trendLg)}` }, ticks: { callback: v => FMT[m](v) } } } } });
+    }
+  }
+  // ranking dot plots (value axis does not start at zero, so dots instead of bars)
+  const rankChart = (id, rows, m, avg, colorOf) => chart(id, { type: "line",
+    data: { labels: rows.map(r => abbr(r.team_id)), datasets: [{ data: rows.map(r => r[m]), showLine: false, pointRadius: 6, pointHoverRadius: 8,
+      pointBackgroundColor: rows.map(colorOf), pointBorderColor: rows.map(colorOf) }] },
+    options: { indexAxis: "y", plugins: { legend: { display: false }, tooltip: { callbacks: {
+        title: c => (TEAMS.get(rows[c[0].dataIndex].team_id) || {}).team_name || "", label: c => `${t("m_" + m)}: ${FMT[m](c.raw)} · #${c.dataIndex + 1}` } } },
+      scales: { y: { ticks: { autoSkip: false, font: { size: 11 } }, grid: { display: false } }, x: { position: "top", ticks: { callback: v => FMT[m](v) } } } },
+    plugins: [refLine(avg, "x")] });
+  if (LG.sub === "off" && offOk && offSorted.length) rankChart("c-off", offSorted, oM, lgOff && lgOff[oM], () => acc);
+  if (LG.sub === "pit" && pitOk && pitSorted.length) rankChart("c-pit", pitSorted, pM, lgPitF && lgPitF[pM],
+    r => r[pM] == null || !lgPitF ? muted : ((LOWER_BETTER.has(pM) ? r[pM] <= lgPitF[pM] : r[pM] >= lgPitF[pM]) ? win : loss));
+  // existing charts (unchanged)
   chart("c-scatter", { type: "scatter", data: { datasets: [{ label: t("team"), data: ts.map(r => ({ x: r.run_differential, y: r.wins, a: r.team_abbreviation })), backgroundColor: acc, pointRadius: 5 }] },
     options: { plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => `${c.raw.a}: ${sgn(c.raw.x)} RD, ${c.raw.y} W` } } },
       scales: { x: { title: { display: true, text: t("rd") } }, y: { title: { display: true, text: "W" } } } } });
   const lk = ts.slice().sort((a, b) => b.luck_wins - a.luck_wins);
   chart("c-luck", { type: "bar", data: { labels: lk.map(r => r.team_abbreviation), datasets: [{ data: lk.map(r => r.luck_wins), backgroundColor: lk.map(r => r.luck_wins >= 0 ? win : loss) }] },
     options: { plugins: { legend: { display: false } }, scales: { x: { ticks: { autoSkip: false, maxRotation: 90, font: { size: 10 } } }, y: {} } } });
+
+  // controls
+  const seg = (id, fn) => document.querySelectorAll(`#${id} button`).forEach(b => { b.onclick = () => { fn(b.dataset.k); render(); }; });
+  seg("lg-tm", k => { LG.trend = k; }); seg("lg-tl", k => { LG.trendLg = k; }); seg("lg-tc", k => { LG.cmp = k === "1"; });
+  seg("lg-sub", k => { LG.sub = k; }); seg("lg-om", k => { LG.offM = k; }); seg("lg-ol", k => { LG.offLg = k; });
+  seg("lg-pm", k => { LG.pitM = k; }); seg("lg-pl", k => { LG.pitLg = k; });
+  document.querySelectorAll("#view [data-off]").forEach(b => { b.onclick = () => { LG.offM = b.dataset.off; render(); }; });
+  document.querySelectorAll("#view [data-pit]").forEach(b => { b.onclick = () => { LG.pitM = b.dataset.pit; render(); }; });
   bindRows(k => { S.team = Number(k); go("team"); });
 }
 
