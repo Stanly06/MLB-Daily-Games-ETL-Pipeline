@@ -26,7 +26,7 @@ FOLDER_NAME = os.environ.get("MLB_GIT_FOLDER_NAME", "MLB-Daily-Games-ETL-Pipelin
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def api(method, path, body=None, query=None, allow_missing=False):
+def api(method, path, body=None, query=None, allow_missing=False, soft=False):
     url = f"{HOST}{path}" + (f"?{urllib.parse.urlencode(query)}" if query else "")
     req = urllib.request.Request(url, method=method, data=json.dumps(body).encode() if body is not None else None,
                                  headers={"Authorization": f"Bearer {TOKEN}", "Content-Type": "application/json"})
@@ -35,7 +35,7 @@ def api(method, path, body=None, query=None, allow_missing=False):
             raw = r.read()
             return json.loads(raw) if raw else {}
     except urllib.error.HTTPError as e:
-        if allow_missing and e.code == 404:
+        if (allow_missing and e.code == 404) or soft:
             return None
         sys.exit(f"::error::{method} {path} -> HTTP {e.code}: {e.read().decode()[:500]}")
 
@@ -46,16 +46,14 @@ def main():
     print(f"Workspace user: {me}\nGit folder: {folder}")
 
     # 1. Git folder -> latest main (create it if it does not exist yet)
+    # Git folders are reported as REPO or DIRECTORY depending on the workspace; their object_id is the repo id
     status = api("GET", "/api/2.0/workspace/get-status", query={"path": folder}, allow_missing=True)
-    if status and status.get("object_type") == "REPO":
-        repo = {"id": status["object_id"]}
-        print("Git folder found")
-    elif status:
-        sys.exit(f"::error::{folder} exists but is not a Git folder ({status.get('object_type')})")
-    else:
-        repo = api("POST", "/api/2.0/repos", {"url": REPO_URL, "provider": "gitHub", "path": folder})
-        print(f"Created Git folder {folder}")
-    updated = api("PATCH", f"/api/2.0/repos/{repo['id']}", {"branch": "main"})
+    updated = api("PATCH", f"/api/2.0/repos/{status['object_id']}", {"branch": "main"}, soft=True) if status else None
+    if updated is None:
+        repo = api("POST", "/api/2.0/repos", {"url": REPO_URL, "provider": "gitHub", "path": folder}, soft=bool(status))
+        if repo is None:
+            sys.exit(f"::error::{folder} exists but could not be used as a Git folder")
+        updated = api("PATCH", f"/api/2.0/repos/{repo['id']}", {"branch": "main"})
     print(f"Git folder on main @ {updated.get('head_commit_id', '?')[:7]}")
 
     # 2. Jobs from the repository definition
