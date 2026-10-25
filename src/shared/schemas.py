@@ -11,7 +11,7 @@ _LINE_TEAM = "struct<runs:int,hits:int,errors:int,leftOnBase:int>"
 SCHEDULE = f"""
 struct<dates:array<struct<date:string,games:array<struct<
   gamePk:bigint, gameType:string, season:string, gameDate:string, officialDate:string,
-  status:struct<abstractGameState:string,codedGameState:string,detailedState:string,reason:string>,
+  status:struct<abstractGameState:string,codedGameState:string,detailedState:string,reason:string,startTimeTBD:boolean>,
   teams:struct<
     home:struct<team:{_TEAM_REF},score:int,isWinner:boolean,leagueRecord:struct<wins:int,losses:int>,probablePitcher:{_PERSON_REF}>,
     away:struct<team:{_TEAM_REF},score:int,isWinner:boolean,leagueRecord:struct<wins:int,losses:int>,probablePitcher:{_PERSON_REF}>>,

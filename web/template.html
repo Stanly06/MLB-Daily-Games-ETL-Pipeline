@@ -115,8 +115,8 @@ h2 .flag { font-size: .9em; margin-right: 8px; vertical-align: 1px; }
 .seg button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
 .day { display: grid; gap: 0; }
 .day h4 { margin: 14px 0 6px; font-family: var(--f-display); font-size: 18px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
-.game { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; gap: 10px 14px; align-items: center; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--r); background: var(--surface); margin-bottom: 6px; }
-.game .tm { font-family: var(--f-data); font-size: 12px; color: var(--muted); }
+.game { display: grid; grid-template-columns: 76px minmax(0, 1fr) auto; gap: 10px 14px; align-items: center; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--r); background: var(--surface); margin-bottom: 6px; }
+.game .tm { font-family: var(--f-data); font-size: 12px; color: var(--muted); white-space: nowrap; }
 .game .mu { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; min-width: 0; }
 .game .mu .side { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; }
 .game .mu .won { color: var(--win); }
@@ -137,7 +137,7 @@ h2 .flag { font-size: .9em; margin-right: 8px; vertical-align: 1px; }
 .odds input { width: 84px; font: inherit; font-family: var(--f-data); padding: 4px 6px; border: 1px solid var(--line); border-radius: var(--r); }
 .odds .out { font-family: var(--f-data); font-size: 12.5px; }
 .disclaimer { font-size: 12.5px; color: var(--muted); border-left: 3px solid var(--gold); padding: 6px 10px; background: var(--surface-2); border-radius: 0 var(--r) var(--r) 0; }
-@media (max-width: 560px) { .game { grid-template-columns: 52px minmax(0, 1fr); } .game .right { grid-column: 2; } .fc .pct { font-size: 24px; } }
+@media (max-width: 560px) { .game { grid-template-columns: 64px minmax(0, 1fr); } .game .right { grid-column: 2; } .fc .pct { font-size: 24px; } }
 .pc { display: inline-flex; align-items: center; gap: 8px; }
 .av { position: relative; display: inline-grid; place-items: center; width: 36px; height: 36px; flex: none; border-radius: 50%; background: var(--surface-2); border: 1px solid var(--line); overflow: hidden; }
 .av b { font-family: var(--f-display); font-size: 13px; font-weight: 600; color: var(--muted); }
@@ -642,7 +642,7 @@ function viewForecast() {
     const g = r.g, ph = r.p, pa = 1 - r.p, favHome = ph >= 0.5;
     const sp = (name, fip, known) => known && name ? `${esc(name)}${fip != null ? ` · FIP ${f2(fip)}` : ""}` : t("tbd");
     return `<div class="fc" data-g="${g.game_pk}">
-      <div class="meta2"><span>${esc(fmtDay(g.official_date))} · ${fmtTime(g.start_utc)}</span>${g.series_description ? `<span class="chip">${esc(g.series_description)}${g.series_game_number ? " · G" + g.series_game_number : ""}</span>` : ""}<span>${esc(g.venue_name || "")}</span></div>
+      <div class="meta2"><span>${esc(fmtDay(g.official_date))} · ${g.start_time_tbd ? t("tbd") : fmtTime(g.start_utc)}</span>${g.series_description ? `<span class="chip">${esc(g.series_description)}${g.series_game_number ? " · G" + g.series_game_number : ""}</span>` : ""}<span>${esc(g.venue_name || "")}</span></div>
       <div class="teams">
         <div class="team">${logo(g.away_team_id, 44)}<div><b class="${!favHome ? "fav" : ""}">${esc(abbr(g.away_team_id))}</b><div class="note">${t("starter")}: ${sp(g.away_probable_pitcher, r.away_sp_fip, r.away_starter_known)}</div></div></div>
         <div class="pct"><span class="${!favHome ? "fav" : ""}">${pct0(pa)}</span> · <span class="${favHome ? "fav" : ""}">${pct0(ph)}</span></div>
@@ -724,7 +724,7 @@ function viewCalendar() {
     const sub = [g.venue_name ? esc(g.venue_name) : "", g.series_description && g.season_type === "Postseason" ? `<span class="chip">${esc(g.series_description)}</span>` : "",
       !g.done ? `${t("starter")}: ${esc(g.away_probable_pitcher || t("tbd"))} vs ${esc(g.home_probable_pitcher || t("tbd"))}` : (g.winning_pitcher_id ? `W: ${esc(pname(g.winning_pitcher_id))}` : ""),
       leagueOf(g.home_team_id) !== leagueOf(g.away_team_id) ? `<span class="chip">${t("interleague")}</span>` : ""].filter(Boolean).join("<span>·</span>");
-    return `<div class="game"><span class="tm">${fmtTime(g.start_utc) || "—"}</span><div class="mu">${side(g.away_team_id, g.done && !homeWon)}<span class="note">@</span>${side(g.home_team_id, homeWon)}</div><div class="right">${right}${check}</div><div class="sub">${sub}</div></div>`;
+    return `<div class="game"><span class="tm">${g.start_time_tbd ? t("tbd") : (fmtTime(g.start_utc) || "—")}</span><div class="mu">${side(g.away_team_id, g.done && !homeWon)}<span class="note">@</span>${side(g.home_team_id, homeWon)}</div><div class="right">${right}${check}</div><div class="sub">${sub}</div></div>`;
   };
   let oppPanel = "";
   if (S.calTeam) {
