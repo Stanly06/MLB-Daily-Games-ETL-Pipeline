@@ -12,6 +12,8 @@ served as a star schema for **Power BI** and a static **web platform**.
 
 **Stack:** Python · PySpark · Spark SQL · Delta Lake (MERGE) · Auto Loader · Unity Catalog (catalog, schemas, Volumes) · Lakeflow Jobs · Power BI · REST API
 
+> **Live web platform (ES/EN): https://stanly06.github.io/mlb-intelligence/** — built from the Gold layer by [`web/`](web/README.md).
+
 > **v2.** The first version ([`legacy/v1`](legacy/v1/)) loaded only yesterday's schedule into a daily
 > summary. v2 adds boxscores, players, teams, venues and standings, a historical backfill, incremental
 > processing, 20 Gold KPI objects, data-quality checks with external reconciliation, a Power BI model
