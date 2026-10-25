@@ -131,6 +131,14 @@ extract_mlb_api → bronze_ingest ─┬→ silver_dimensions ──────
                                                                        └→ gold_player_metrics → gold_dominican_players ┴→ gold_semantic_layer → gold_game_features → ml_win_probability → data_quality → web_platform_export
 ```
 
+**Continuous deployment and publishing** (GitHub Actions in the portfolio repository, using the
+`DATABRICKS_HOST` / `DATABRICKS_TOKEN` secrets):
+
+| Workflow | When | What it does |
+|---|---|---|
+| `deploy-mlb-databricks.yml` | daily 05:31 Santo Domingo | Pulls the workspace Git folder to the latest `main` and updates both jobs from this repository ([`scripts/databricks_deploy.py`](scripts/databricks_deploy.py)); never starts a backfill |
+| `refresh-mlb-platform.yml` | daily 07:41 Santo Domingo | Downloads the Gold export, validates it (freshness, completeness, no critical DQ failures), rebuilds the web platform and publishes it if it changed |
+
 Job parameters reach every notebook as widgets: `mode` (`daily` / `backfill`), `seasons`,
 `start_date` / `end_date`, `lookback_days`, `refresh_people`, `full_refresh`.
 
@@ -197,6 +205,7 @@ python tests/local_run.py --backfill 2025                      # a full season
 ├── docs/              BRD · KPI catalog · data source assessment · data model
 ├── powerbi/           build guide · measures.dax · theme
 ├── web/               template.html · build.py
+├── scripts/           databricks_deploy.py (CI: Git folder pull + job update)
 ├── tests/             local_run.py · test_mlb_api.py
 └── legacy/v1/         original daily-summary pipeline
 ```
