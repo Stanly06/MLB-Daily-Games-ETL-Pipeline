@@ -26,7 +26,7 @@ FOLDER_NAME = os.environ.get("MLB_GIT_FOLDER_NAME", "MLB-Daily-Games-ETL-Pipelin
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def api(method, path, body=None, query=None):
+def api(method, path, body=None, query=None, allow_missing=False):
     url = f"{HOST}{path}" + (f"?{urllib.parse.urlencode(query)}" if query else "")
     req = urllib.request.Request(url, method=method, data=json.dumps(body).encode() if body is not None else None,
                                  headers={"Authorization": f"Bearer {TOKEN}", "Content-Type": "application/json"})
@@ -35,6 +35,8 @@ def api(method, path, body=None, query=None):
             raw = r.read()
             return json.loads(raw) if raw else {}
     except urllib.error.HTTPError as e:
+        if allow_missing and e.code == 404:
+            return None
         sys.exit(f"::error::{method} {path} -> HTTP {e.code}: {e.read().decode()[:500]}")
 
 
@@ -44,13 +46,13 @@ def main():
     print(f"Workspace user: {me}\nGit folder: {folder}")
 
     # 1. Git folder -> latest main (create it if it does not exist yet)
-    norm = lambda p: (p or "").removeprefix("/Workspace").rstrip("/").lower()
-    repos = api("GET", "/api/2.0/repos", query={"path_prefix": f"/Users/{me}"}).get("repos", [])
-    repo = next((r for r in repos if norm(r.get("path")) == norm(folder)), None) \
-        or next((r for r in repos if (r.get("url") or "").rstrip("/").lower().endswith("mlb-daily-games-etl-pipeline")), None)
-    for r in repos:
-        print(f"  Git folder in workspace: {r.get('path')} ({r.get('url')})")
-    if repo is None:
+    status = api("GET", "/api/2.0/workspace/get-status", query={"path": folder}, allow_missing=True)
+    if status and status.get("object_type") == "REPO":
+        repo = {"id": status["object_id"]}
+        print("Git folder found")
+    elif status:
+        sys.exit(f"::error::{folder} exists but is not a Git folder ({status.get('object_type')})")
+    else:
         repo = api("POST", "/api/2.0/repos", {"url": REPO_URL, "provider": "gitHub", "path": folder})
         print(f"Created Git folder {folder}")
     updated = api("PATCH", f"/api/2.0/repos/{repo['id']}", {"branch": "main"})
