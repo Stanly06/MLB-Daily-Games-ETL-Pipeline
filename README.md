@@ -188,6 +188,15 @@ python tests/local_run.py --backfill 2025                      # a full season
 - **Power BI**: model, relationships, 7 report pages and DAX measures in [`powerbi/`](powerbi/README.md).
 - **Web platform**: [`web/`](web/) builds a single-page explorer from the Gold export (Spanish/English): league, team pages with logos, player profiles with photo, current team and full season stats, head-to-head, leaders, players by country (any nationality) and data quality. Logos and headshots load from MLB's public image CDN; where a host blocks external images the page shows the team abbreviation or the player's initials instead.
 
+## Documentation
+
+| | |
+|---|---|
+| Business | [Requirements](docs/01_Business_Requirements_Document.md) · [KPI Catalog](docs/02_KPI_Catalog.md) · [Project Journey](docs/11_Project_Journey.md) |
+| Data | [Source Assessment](docs/03_Data_Source_Assessment.md) · [Data Model](docs/04_Data_Model.md) · [Data Dictionary](docs/05_Data_Dictionary.md) |
+| Engineering | [Pipeline & Notebooks](docs/06_Pipeline_and_Notebooks.md) · [Architecture Decisions](docs/07_Architecture_Decisions.md) · [Operations Runbook](docs/10_Operations_Runbook.md) |
+| Quality & ML | [Data Quality & Validation](docs/08_Data_Quality_and_Validation.md) · [Win-Probability Model](docs/09_Win_Probability_Model.md) |
+
 ## Repository structure
 
 ```
@@ -202,7 +211,7 @@ python tests/local_run.py --backfill 2025                      # a full season
 │   └── exports/       01_Web_Platform_Export
 ├── databricks.yml     Asset Bundle (deploy notebooks + jobs)
 ├── resources/         mlb_jobs.yml (bundle jobs) · jobs/mlb_performance_daily.job.json (UI import)
-├── docs/              BRD · KPI catalog · data source assessment · data model
+├── docs/              11 documents: requirements, KPIs, sources, model, dictionary, notebooks, ADRs, quality, ML, runbook, changelog
 ├── powerbi/           build guide · measures.dax · theme
 ├── web/               template.html · build.py
 ├── scripts/           databricks_deploy.py (CI: Git folder pull + job update)
