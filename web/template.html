@@ -250,6 +250,7 @@ const I = {
 };
 let lang = "es";
 try { lang = localStorage.getItem("mlb-lang") || "es"; } catch (e) {}
+try { const q = new URLSearchParams(location.search).get("lang"); if (q === "en" || q === "es") lang = q; } catch (e) {}
 const t = k => (I[lang] && I[lang][k]) || k;
 
 // ---------- data helpers ----------
