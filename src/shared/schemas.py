@@ -13,8 +13,8 @@ struct<dates:array<struct<date:string,games:array<struct<
   gamePk:bigint, gameType:string, season:string, gameDate:string, officialDate:string,
   status:struct<abstractGameState:string,codedGameState:string,detailedState:string,reason:string>,
   teams:struct<
-    home:struct<team:{_TEAM_REF},score:int,isWinner:boolean,leagueRecord:struct<wins:int,losses:int>>,
-    away:struct<team:{_TEAM_REF},score:int,isWinner:boolean,leagueRecord:struct<wins:int,losses:int>>>,
+    home:struct<team:{_TEAM_REF},score:int,isWinner:boolean,leagueRecord:struct<wins:int,losses:int>,probablePitcher:{_PERSON_REF}>,
+    away:struct<team:{_TEAM_REF},score:int,isWinner:boolean,leagueRecord:struct<wins:int,losses:int>,probablePitcher:{_PERSON_REF}>>,
   venue:struct<id:int,name:string>,
   decisions:struct<winner:{_PERSON_REF},loser:{_PERSON_REF},save:{_PERSON_REF}>,
   linescore:struct<currentInning:int,scheduledInnings:int,

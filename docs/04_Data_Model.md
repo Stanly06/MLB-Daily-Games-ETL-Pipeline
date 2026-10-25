@@ -79,6 +79,9 @@ erDiagram
 | `dominican_batting_season`, `dominican_pitching_season`, `dominican_latest_games` | views | KPIs DR-005, DR-006 |
 | `dim_date`, `dim_team`, `dim_player`, `dim_venue`, `fact_*` | serving views / table | star schema for Power BI |
 | `league_daily_summary` | date × season type | KPIs LG-001…004 |
+| `game_features` | game (completed and upcoming) | point-in-time pre-game features, home − away |
+| `game_predictions` | game | home win probability, predicted winner, correctness, top factors, split (train / test / upcoming) |
+| `win_model_metrics`, `win_model_calibration`, `win_model_features` | model run | evaluation, calibration and drivers of the win-probability model |
 
 ## 4. Incremental strategy
 
@@ -92,7 +95,7 @@ erDiagram
 ```
 extract_mlb_api → bronze_ingest ─┬→ silver_dimensions ───────────────┐
                                  └→ silver_games → silver_boxscores ─┼→ gold_team_metrics ──────────────┐
-                                                                     └→ gold_player_metrics → gold_dominican_players ─┴→ gold_semantic_layer → data_quality → web_platform_export
+                                                                     └→ gold_player_metrics → gold_dominican_players ─┴→ gold_semantic_layer → gold_game_features → ml_win_probability → data_quality → web_platform_export
 ```
 
 Daily at 06:07 (America/Santo_Domingo). Job parameters (`mode`, `seasons`, `start_date`, `end_date`,

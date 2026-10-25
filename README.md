@@ -10,7 +10,7 @@ two teams met? How are Dominican players performing?* Every regular-season and p
 2024 is modeled at **game, team and player level**, validated against **official MLB standings**, and
 served as a star schema for **Power BI** and a static **web platform**.
 
-**Stack:** Python · PySpark · Spark SQL · Delta Lake (MERGE) · Auto Loader · Unity Catalog (catalog, schemas, Volumes) · Lakeflow Jobs · Power BI · REST API
+**Stack:** Python · PySpark · Spark SQL · Delta Lake (MERGE) · Auto Loader · Unity Catalog (catalog, schemas, Volumes) · Lakeflow Jobs · scikit-learn · MLflow · Power BI · REST API
 
 > **Live web platform (ES/EN): https://stanly06.github.io/mlb-intelligence/** — built from the Gold layer by [`web/`](web/README.md).
 
@@ -41,6 +41,8 @@ Full requirements: [Business Requirements Document](docs/01_Business_Requirement
 | **Players** | AVG/OBP/SLG/OPS, ISO, BABIP, K%, BB%; ERA, WHIP, K/9, **FIP**, quality starts; league ranks among qualified players | `player_season_batting`, `player_season_pitching` |
 | **Form** | Rolling last-15-games OPS and last-5-appearances ERA vs season-to-date | `batting_game_log`, `pitching_game_log` |
 | **Players by country** | Players by birth country (all countries, Dominicans in focus), share of league home runs and strikeouts, top hitters/pitchers per country, last night's lines | `country_season_summary`, `latest_game_day_lines`, `dominican_*` |
+| **Win probability (ML)** | Who is likely to win each upcoming game, and why (starters, form, home/road, bullpen, rest, ballpark); how accurate and calibrated the model is out of sample | `game_features`, `game_predictions`, `win_model_*` |
+| **Schedule** | Full calendar by season, month, league and team (results, probable starters, model pick), each team's opponents | `fact_game` (incl. upcoming games) |
 | **League & operations** | Games, runs, home runs, attendance, duration per day; run log and data-quality results | `league_daily_summary`, `metadata.*`, `quality.dq_results` |
 
 ## Architecture
@@ -97,16 +99,36 @@ Jays–Red Sox game resumed after his trade to Boston, the only time this has ha
 The player-game key became `(game_pk, player_id, team_id)` and the tables were rebuilt with
 `full_refresh`.
 
+## Win-probability model
+
+[`src/gold/05_Gold_Game_Features`](src/gold/05_Gold_Game_Features.ipynb) builds one row per game with
+**point-in-time** features (as-of joins: only games played before first pitch count), and
+[`src/ml/01_Win_Probability_Model`](src/ml/01_Win_Probability_Model.ipynb) trains on 2024–2025 and tests
+on the full 2026 season, which the model never saw:
+
+| Model (test season 2026, 2,465 games) | Accuracy | Log loss | Brier |
+|---|---|---|---|
+| Always the home team | 52.9 % | 0.692 | 0.249 |
+| Team with the better record | 54.1 % | 0.697 | 0.252 |
+| **Logistic regression (selected)** | **56.0 %** | **0.682** | **0.244** |
+| Gradient boosting | 53.9 % | 0.692 | 0.249 |
+
+Calibration on the test season: when the model gave the favourite 60–65 %, the favourite won 63.9 %;
+55–60 % → 55.6 %; 65–70 % → 66.7 %. Gradient boosting reached 64 % accuracy on training data but only
+54 % on the test season (overfitting), so the selection by test log loss kept the simpler model. Upcoming
+games are scored daily with the probable starters announced by MLB. Probabilities, not certainties: the
+best public MLB models pick 55–60 % of winners.
+
 ## Automation
 
 [`resources/jobs/mlb_performance_daily.job.json`](resources/jobs/mlb_performance_daily.job.json) — a
-Lakeflow Job with 11 dependent tasks, daily at **06:07 America/Santo_Domingo** (after West Coast night
+Lakeflow Job with 13 dependent tasks, daily at **06:07 America/Santo_Domingo** (after West Coast night
 games end), e-mail alert on failure:
 
 ```
 extract_mlb_api → bronze_ingest ─┬→ silver_dimensions ─────────────────┐
                                  └→ silver_games → silver_boxscores ───┼→ gold_team_metrics ───────────────────────┐
-                                                                       └→ gold_player_metrics → gold_dominican_players ┴→ gold_semantic_layer → data_quality → web_platform_export
+                                                                       └→ gold_player_metrics → gold_dominican_players ┴→ gold_semantic_layer → gold_game_features → ml_win_probability → data_quality → web_platform_export
 ```
 
 Job parameters reach every notebook as widgets: `mode` (`daily` / `backfill`), `seasons`,
@@ -166,7 +188,8 @@ python tests/local_run.py --backfill 2025                      # a full season
 │   ├── setup/         00_Create_Catalog_Schemas · 01_Create_Metadata_Tables
 │   ├── bronze/        01_MLB_API_Extract · 02_MLB_API_Bronze
 │   ├── silver/        01_Silver_Dimensions · 02_Silver_Games · 03_Silver_Boxscores
-│   ├── gold/          01_Gold_Team_Metrics · 02_Gold_Player_Metrics · 03_Gold_Dominican_Players · 04_Gold_Semantic_Layer
+│   ├── gold/          01_Team_Metrics · 02_Player_Metrics · 03_Dominican_Players · 04_Semantic_Layer · 05_Game_Features
+│   ├── ml/            01_Win_Probability_Model
 │   ├── quality/       01_Data_Quality_Checks
 │   └── exports/       01_Web_Platform_Export
 ├── databricks.yml     Asset Bundle (deploy notebooks + jobs)

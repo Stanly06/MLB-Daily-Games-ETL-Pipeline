@@ -90,6 +90,28 @@ Hot / cold signal in Power BI: `ops_last_15 − ops_season_to_date`.
 | DR-006 | Latest game day | Line of every Dominican player on the most recent game day | `dominican_latest_games` |
 | DR-007 | Any country | DR-001…006 for any birth country (country explorer in the web platform) | `country_season_summary`, `latest_game_day_lines` |
 
+## 7. Win-probability model — `gold.game_features`, `gold.game_predictions`, `gold.win_model_*`
+
+| ID | Output | Definition | Object |
+|---|---|---|---|
+| ML-001 | Home win probability | P(home team wins) from the selected model; upcoming games scored with probable starters | `game_predictions.home_win_prob` |
+| ML-002 | Predicted winner | Team with probability ≥ 50 % | `game_predictions.predicted_winner_id` |
+| ML-003 | Out-of-sample accuracy | Share of test-season games where the predicted winner won, vs baselines | `win_model_metrics` |
+| ML-004 | Log loss / Brier | Quality of the probabilities (lower is better) | `win_model_metrics` |
+| ML-005 | Calibration | Favourite's predicted vs actual win rate by probability bucket | `win_model_calibration` |
+| ML-006 | Drivers | Standardized coefficients and per-game top-3 factors | `win_model_features`, `game_predictions.top_factors` |
+| ML-007 | Market comparison (web) | No-vig implied probability from American odds the user types, edge = model − market, expected value per $100 | web platform only |
+
+Features (home minus away): win %, run differential per game, last-10, home/road split, starter FIP and
+K−BB%, bullpen ERA and 3-day workload, rest days; plus park factor (previous seasons) and postseason flag.
+
+## 7b. Schedule
+
+| ID | Output | Definition | Object |
+|---|---|---|---|
+| CAL-001 | Season calendar | Every game by date, with result or probable starters and the model's pick | `fact_game` (completed and upcoming) |
+| CAL-002 | Opponents | Games, home and away games and first date against each opponent for a team and season | web platform (from `fact_game`) |
+
 ## 7. League and operations KPIs — `gold.league_daily_summary`, `metadata`, `quality`
 
 | ID | KPI | Definition | Object |
@@ -110,4 +132,6 @@ Hot / cold signal in Power BI: `ops_last_15 − ops_season_to_date`.
 | Player | BAT-*, PIT-*, FORM-* | `player_season_batting`, `player_season_pitching`, game logs |
 | Head-to-head | H2H-001…004 | `head_to_head`, `fact_game` |
 | Countries (Dominicans in MLB by default) | DR-001…007 | `country_season_summary`, `latest_game_day_lines`, `dominican_*` |
+| Predictions | ML-001…007 | `game_predictions`, `win_model_*` |
+| Schedule | CAL-001, CAL-002 | `fact_game` |
 | Data health | OPS-001, OPS-002 | `metadata.pipeline_runs`, `quality.dq_results` |

@@ -110,6 +110,34 @@ h2 .flag { font-size: .9em; margin-right: 8px; vertical-align: 1px; }
 .star .num { font-family: var(--f-display); font-size: 26px; font-weight: 600; line-height: 1; color: var(--accent); }
 .tall { max-height: 520px; overflow: auto; }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.seg { display: flex; flex-wrap: wrap; gap: 6px; }
+.seg button { border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 999px; padding: 4px 12px; font-size: 13px; }
+.seg button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.day { display: grid; gap: 0; }
+.day h4 { margin: 14px 0 6px; font-family: var(--f-display); font-size: 18px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+.game { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; gap: 10px 14px; align-items: center; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--r); background: var(--surface); margin-bottom: 6px; }
+.game .tm { font-family: var(--f-data); font-size: 12px; color: var(--muted); }
+.game .mu { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; min-width: 0; }
+.game .mu .side { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; }
+.game .mu .won { color: var(--win); }
+.game .sub { grid-column: 2 / -1; display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--muted); }
+.game .right { display: flex; align-items: center; gap: 8px; }
+.score { font-family: var(--f-display); font-size: 20px; font-weight: 600; }
+.fc { display: grid; gap: 10px; padding: 14px 16px; border: 1px solid var(--line); border-radius: var(--r); background: var(--surface); }
+.fc .teams { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 12px; }
+.fc .team { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.fc .team.home { justify-content: flex-end; text-align: right; }
+.fc .team b { font-family: var(--f-display); font-size: 22px; }
+.fc .pct { font-family: var(--f-display); font-size: 30px; font-weight: 700; }
+.fc .fav { color: var(--accent); }
+.bar2 { display: flex; height: 10px; border-radius: 999px; overflow: hidden; background: var(--surface-2); }
+.bar2 span { display: block; height: 100%; }
+.fc .meta2 { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 12.5px; color: var(--muted); }
+.odds { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 13px; }
+.odds input { width: 84px; font: inherit; font-family: var(--f-data); padding: 4px 6px; border: 1px solid var(--line); border-radius: var(--r); }
+.odds .out { font-family: var(--f-data); font-size: 12.5px; }
+.disclaimer { font-size: 12.5px; color: var(--muted); border-left: 3px solid var(--gold); padding: 6px 10px; background: var(--surface-2); border-radius: 0 var(--r) var(--r) 0; }
+@media (max-width: 560px) { .game { grid-template-columns: 52px minmax(0, 1fr); } .game .right { grid-column: 2; } .fc .pct { font-size: 24px; } }
 .pc { display: inline-flex; align-items: center; gap: 8px; }
 .av { position: relative; display: inline-grid; place-items: center; width: 36px; height: 36px; flex: none; border-radius: 50%; background: var(--surface-2); border: 1px solid var(--line); overflow: hidden; }
 .av b { font-family: var(--f-display); font-size: 13px; font-weight: 600; color: var(--muted); }
@@ -157,6 +185,17 @@ const I = {
     gameLog:"Registro de juegos", career:"Temporadas", born:"Nació en", bats:"Batea", throws:"Lanza", age:"Edad",
     vs:"vs", meetings:"Juegos entre ambos", allSeasons:"Todas las temporadas", thisSeason:"Esta temporada", date:"Fecha", score:"Marcador", venue:"Estadio", wp:"Ganador",
     noMeet:"No se enfrentaron en esta selección.", qualified:"calificados", minPA:"mín.", drLede:"Peloteros nacidos en República Dominicana: cuántos son, qué parte de la producción de la liga aportan y cómo les fue en la última jornada.",
+    forecast:"Pronósticos", calendar:"Calendario",
+    fcLede:"Probabilidad de que gane cada equipo, calculada por un modelo entrenado con temporadas anteriores. Usa récord, forma reciente, local/visitante, pitcher abridor, bullpen, descanso y estadio, todo con información disponible antes del juego.",
+    fcAcc:"Aciertos del modelo", fcBase:"Siempre el local", fcLL:"Log loss", fcBrier:"Brier", fcGames:"Juegos evaluados", fcModel:"Modelo",
+    fcUpcoming:"Próximos juegos", fcNone:"No hay juegos programados con pronóstico.", tbd:"Por anunciar", starter:"Abridor", factors:"Lo que más pesa",
+    oddsLabel:"Compara con una cuota (americana)", oddsHint:"ej. -150 y +130", implied:"Mercado sin comisión", edge:"Diferencia modelo − mercado",
+    ev:"Valor esperado por $100", calibTitle:"Calibración: lo que dijo el modelo vs lo que pasó", calibPred:"Probabilidad del favorito", calibAct:"Ganó el favorito",
+    featTitle:"Qué mueve la probabilidad", backtest:"Juegos evaluados", pick:"Pronóstico", result:"Resultado",
+    disclaimer:"Son probabilidades, no certezas: los mejores modelos de MLB aciertan entre 55 % y 60 % de los juegos. Las cuotas de las casas de apuestas ya incluyen esta información. No es una recomendación de apuesta; si apuestas, hazlo con montos que puedas perder.",
+    calLede:"Calendario de la temporada con resultados y próximos juegos. Filtra por liga, equipo y mes.", allTeams:"Todos los equipos", allLeagues:"Todas",
+    nextOpp:"Rivales de la temporada", games2:"Juegos", homeG:"En casa", awayG:"De visita", firstMeet:"Primer juego", calNone:"No hay juegos con estos filtros.",
+    season2:"Temporada", month:"Mes", league2:"Liga", seasonSum:"Resumen", interleague:"Interliga",
     stars:"Destacados", hrLeader:"Líder en jonrones", avgLeader:"Mejor promedio", opsLeader:"Mejor OPS", rbiLeader:"Líder en impulsadas", sbLeader:"Líder en bases robadas",
     soLeader:"Líder en ponches", eraLeader:"Mejor efectividad", svLeader:"Líder en salvados", wLeader:"Líder en victorias",
     hrBy:"Jonrones por pelotero", soBy:"Ponches por lanzador", trend:"Evolución por temporada", teamsWith:"Equipos con más peloteros de", positions:"Posiciones",
@@ -184,6 +223,17 @@ const I = {
     gameLog:"Game log", career:"Seasons", born:"Born in", bats:"Bats", throws:"Throws", age:"Age",
     vs:"vs", meetings:"Meetings", allSeasons:"All seasons", thisSeason:"This season", date:"Date", score:"Score", venue:"Venue", wp:"Winner",
     noMeet:"They did not meet in this selection.", qualified:"qualified", minPA:"min.", drLede:"Players born in the Dominican Republic: how many, what share of league production they deliver, and how they did on the latest game day.",
+    forecast:"Predictions", calendar:"Schedule",
+    fcLede:"Each team's chance to win, from a model trained on previous seasons. It uses record, recent form, home/road, starting pitcher, bullpen, rest and ballpark, all with information available before first pitch.",
+    fcAcc:"Model accuracy", fcBase:"Always the home team", fcLL:"Log loss", fcBrier:"Brier", fcGames:"Games evaluated", fcModel:"Model",
+    fcUpcoming:"Upcoming games", fcNone:"No scheduled games with a prediction.", tbd:"TBD", starter:"Starter", factors:"Biggest factors",
+    oddsLabel:"Compare with odds (American)", oddsHint:"e.g. -150 and +130", implied:"Market without vig", edge:"Model − market",
+    ev:"Expected value per $100", calibTitle:"Calibration: what the model said vs what happened", calibPred:"Favourite's probability", calibAct:"Favourite won",
+    featTitle:"What moves the probability", backtest:"Evaluated games", pick:"Pick", result:"Result",
+    disclaimer:"These are probabilities, not certainties: the best MLB models pick the winner in 55–60% of games, and sportsbook odds already include this information. Not betting advice; if you bet, only risk what you can afford to lose.",
+    calLede:"Season schedule with results and upcoming games. Filter by league, team and month.", allTeams:"All teams", allLeagues:"All",
+    nextOpp:"Season opponents", games2:"Games", homeG:"Home", awayG:"Away", firstMeet:"First game", calNone:"No games match these filters.",
+    season2:"Season", month:"Month", league2:"League", seasonSum:"Summary", interleague:"Interleague",
     stars:"Standouts", hrLeader:"Home run leader", avgLeader:"Best average", opsLeader:"Best OPS", rbiLeader:"RBI leader", sbLeader:"Stolen base leader",
     soLeader:"Strikeout leader", eraLeader:"Best ERA", svLeader:"Saves leader", wLeader:"Wins leader",
     hrBy:"Home runs by player", soBy:"Strikeouts by pitcher", trend:"Trend by season", teamsWith:"Teams with the most players from", positions:"Positions",
@@ -261,8 +311,8 @@ const fmtHeight = h => h ? `${Math.floor(h / 12)}' ${h % 12}"` : "—";
 
 // ---------- state ----------
 const seasons = RAW.meta.seasons.slice().sort((a, b) => b - a);
-const S = { season: seasons[0], type: "Regular Season", team: null, team2: null, player: null, q: "", country: "Dominican Republic" };
-const TABS = ["league", "team", "player", "h2h", "leaders", "dr", "quality"];
+const S = { season: seasons[0], type: "Regular Season", team: null, team2: null, player: null, q: "", country: "Dominican Republic", calSeason: null, calMonth: null, calLeague: "", calTeam: 0, fcTeam: 0 };
+const TABS = ["league", "team", "player", "h2h", "leaders", "dr", "forecast", "calendar", "quality"];
 const HASH = { dr: "countries" }; const fromHash = h => (h === "countries" ? "dr" : h);
 const hashTab = fromHash(location.hash.slice(1));
 let tab = TABS.includes(hashTab) ? hashTab : "league";
@@ -551,6 +601,156 @@ function viewQuality() {
     <p class="note">${q.length ? q[0].checked_at : ""}</p></div>`);
 }
 
+
+// ---------- predictions + schedule ----------
+const has = k => RAW[k] && RAW[k].rows;
+const PRED = new Map(has("predictions") ? tbl("predictions").map(r => [r.game_pk, r]) : []);
+const START = new Map(has("game_times") ? tbl("game_times").map(r => [r.game_pk, r.start_utc]) : []);
+const FEAT_ES = { d_win_pct: "Récord", d_run_diff: "Diferencial de carreras", d_last10: "Últimos 10", d_split: "Local/visitante",
+  d_starter_fip: "Pitcher abridor", d_starter_kbb: "Ponches−boletos del abridor", d_bullpen_era: "Bullpen", d_bullpen_fatigue: "Descanso del bullpen",
+  d_rest: "Días de descanso", park_factor: "Estadio", is_postseason: "Postemporada" };
+const featLabel = (f, en) => lang === "es" ? (FEAT_ES[f] || f) : (en || f);
+const tz = "America/Santo_Domingo";
+const fmtTime = iso => iso ? new Date(iso).toLocaleTimeString(lang === "es" ? "es-DO" : "en-US", { timeZone: tz, hour: "numeric", minute: "2-digit" }) : "";
+const fmtDay = d => new Date(d + "T12:00:00Z").toLocaleDateString(lang === "es" ? "es-DO" : "en-US", { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" });
+const pct0 = v => v == null ? "—" : Math.round(v * 100) + "%";
+const amToProb = o => { o = Number(o); if (!o || Math.abs(o) < 100) return null; return o > 0 ? 100 / (o + 100) : -o / (-o + 100); };
+const amPayout = o => (o = Number(o)) > 0 ? o : 10000 / -o;
+const leagueOf = id => (TEAMS.get(id) || {}).league_abbreviation;
+
+function factorText(pr, homeId, awayId) {
+  let f = []; try { f = JSON.parse(pr.top_factors || "[]"); } catch (e) {}
+  const feats = new Map(has("model_features") ? tbl("model_features").map(x => [x.feature, x.label]) : []);
+  return f.filter(x => Math.abs(x.v) >= 0.02).map(x => `<span class="chip">${esc(featLabel(x.f, feats.get(x.f)))} → ${esc(abbr(x.v > 0 ? homeId : awayId))}</span>`).join("");
+}
+
+function viewForecast() {
+  if (!has("predictions")) { view(`<section><h2>${t("forecast")}</h2><p class="empty">${t("fcNone")}</p></section>`); return; }
+  const met = tbl("model_metrics");
+  const sel = met.find(r => r.selected && r.split === "test") || {};
+  const base = met.find(r => r.model === "Baseline: home team") || {};
+  const sched = new Map(tbl("schedule").map(r => [r.game_pk, r]));
+  let up = tbl("predictions").filter(r => r.split === "upcoming" && sched.has(r.game_pk))
+    .map(r => ({ ...r, g: sched.get(r.game_pk) })).sort((a, b) => (a.g.start_utc || "").localeCompare(b.g.start_utc || ""));
+  if (S.fcTeam) up = up.filter(r => r.g.home_team_id === S.fcTeam || r.g.away_team_id === S.fcTeam);
+  up = up.slice(0, 24);
+  const teamOpts = `<option value="0">${t("allTeams")}</option>` + tbl("teams").map(x => `<option value="${x.team_id}"${x.team_id === S.fcTeam ? " selected" : ""}>${esc(x.team_name)}</option>`).join("");
+  const test = tbl("predictions").filter(r => r.split === "test");
+  const gmap = new Map(tbl("games").map(g => [g.game_pk, g]));
+  const recent = test.map(r => ({ ...r, g: gmap.get(r.game_pk) })).filter(r => r.g).sort((a, b) => b.g.official_date.localeCompare(a.g.official_date)).slice(0, 25);
+  const card = r => {
+    const g = r.g, ph = r.p, pa = 1 - r.p, favHome = ph >= 0.5;
+    const sp = (name, fip, known) => known && name ? `${esc(name)}${fip != null ? ` · FIP ${f2(fip)}` : ""}` : t("tbd");
+    return `<div class="fc" data-g="${g.game_pk}">
+      <div class="meta2"><span>${esc(fmtDay(g.official_date))} · ${fmtTime(g.start_utc)}</span>${g.series_description ? `<span class="chip">${esc(g.series_description)}${g.series_game_number ? " · G" + g.series_game_number : ""}</span>` : ""}<span>${esc(g.venue_name || "")}</span></div>
+      <div class="teams">
+        <div class="team">${logo(g.away_team_id, 44)}<div><b class="${!favHome ? "fav" : ""}">${esc(abbr(g.away_team_id))}</b><div class="note">${t("starter")}: ${sp(g.away_probable_pitcher, r.away_sp_fip, r.away_starter_known)}</div></div></div>
+        <div class="pct"><span class="${!favHome ? "fav" : ""}">${pct0(pa)}</span> · <span class="${favHome ? "fav" : ""}">${pct0(ph)}</span></div>
+        <div class="team home"><div><b class="${favHome ? "fav" : ""}">${esc(abbr(g.home_team_id))}</b><div class="note">${t("starter")}: ${sp(g.home_probable_pitcher, r.home_sp_fip, r.home_starter_known)}</div></div>${logo(g.home_team_id, 44)}</div>
+      </div>
+      <div class="bar2"><span style="width:${(pa * 100).toFixed(1)}%;background:${favHome ? "var(--chalk)" : "var(--accent)"}"></span><span style="width:${(ph * 100).toFixed(1)}%;background:${favHome ? "var(--accent)" : "var(--chalk)"}"></span></div>
+      <div class="meta2"><span>${t("factors")}:</span>${factorText(r, g.home_team_id, g.away_team_id) || "—"}</div>
+      <div class="odds"><span>${t("oddsLabel")}:</span>
+        <label class="note" for="oa-${g.game_pk}">${esc(abbr(g.away_team_id))}</label><input id="oa-${g.game_pk}" inputmode="numeric" placeholder="+130" data-side="a">
+        <label class="note" for="oh-${g.game_pk}">${esc(abbr(g.home_team_id))}</label><input id="oh-${g.game_pk}" inputmode="numeric" placeholder="-150" data-side="h">
+        <span class="out" id="oo-${g.game_pk}">${t("oddsHint")}</span></div>
+    </div>`;
+  };
+  view(`
+    <section class="hero"><div class="meta"><h2>${t("forecast")}</h2><p class="lede">${t("fcLede")}</p></div>
+      <div class="pick"><label for="f-fcteam" class="note">${t("team")}</label><select id="f-fcteam">${teamOpts}</select></div></section>
+    <div class="stats">${stat(`${t("fcAcc")} (${sel.test_season || ""})`, sel.accuracy != null ? (sel.accuracy * 100).toFixed(1) + "%" : "—", `${t("fcBase")}: ${base.accuracy != null ? (base.accuracy * 100).toFixed(1) + "%" : "—"}`)}${stat(t("fcGames"), n0(sel.games))}${stat(t("fcLL"), sel.log_loss != null ? sel.log_loss.toFixed(3) : "—", `${t("fcBase")}: ${base.log_loss != null ? base.log_loss.toFixed(3) : "—"}`)}${stat(t("fcBrier"), sel.brier != null ? sel.brier.toFixed(3) : "—")}${stat(t("fcModel"), `<span style="font-size:18px">${esc(sel.model || "—")}</span>`)}</div>
+    <p class="disclaimer">${t("disclaimer")}</p>
+    <section><h3>${t("fcUpcoming")}</h3>${up.length ? `<div class="grid wide">${up.map(card).join("")}</div>` : `<p class="empty">${t("fcNone")}</p>`}</section>
+    <div class="grid wide">
+      <div class="panel"><h3>${t("calibTitle")}</h3><div class="chart"><canvas id="c-calib"></canvas></div></div>
+      <div class="panel"><h3>${t("featTitle")}</h3><div class="chart"><canvas id="c-feat"></canvas></div></div>
+    </div>
+    <div class="panel"><h3>${t("backtest")} · ${sel.test_season || ""}</h3><div class="tall">${table([
+      { h: t("date"), l: 1, v: r => r.g.official_date }, { h: "", l: 1, v: r => `<span class="pc">${logo(r.g.away_team_id, 22)}${esc(abbr(r.g.away_team_id))} @ ${logo(r.g.home_team_id, 22)}${esc(abbr(r.g.home_team_id))}</span>` },
+      { h: t("pick"), l: 1, v: r => `${esc(abbr(r.p >= 0.5 ? r.g.home_team_id : r.g.away_team_id))} ${pct0(Math.max(r.p, 1 - r.p))}` },
+      { h: t("result"), l: 1, v: r => `${r.g.away_score}-${r.g.home_score}` },
+      { h: "", v: r => `<span class="pill ${r.correct ? "w" : "l"}">${r.correct ? "✓" : "✗"}</span>` }], recent)}</div></div>`);
+  document.getElementById("f-fcteam").onchange = e => { S.fcTeam = Number(e.target.value); render(); };
+  document.querySelectorAll("#view .fc").forEach(el => {
+    const gp = Number(el.dataset.g), r = up.find(x => x.g.game_pk === gp); const out = el.querySelector(".out");
+    const upd = () => {
+      const oa = el.querySelector('[data-side="a"]').value, oh = el.querySelector('[data-side="h"]').value;
+      const ia = amToProb(oa), ih = amToProb(oh);
+      if (ia == null || ih == null) { out.textContent = t("oddsHint"); return; }
+      const nh = ih / (ia + ih), na = 1 - nh, eh = r.p - nh, ea = (1 - r.p) - na;
+      const evH = r.p * amPayout(oh) - (1 - r.p) * 100, evA = (1 - r.p) * amPayout(oa) - r.p * 100;
+      out.innerHTML = `${t("implied")}: ${esc(abbr(r.g.away_team_id))} ${pct0(na)} · ${esc(abbr(r.g.home_team_id))} ${pct0(nh)} — ${t("edge")}: ${esc(abbr(r.g.away_team_id))} <b class="${cls(ea)}">${sgn(Math.round(ea * 1000) / 10)} pts</b>, ${esc(abbr(r.g.home_team_id))} <b class="${cls(eh)}">${sgn(Math.round(eh * 1000) / 10)} pts</b> — ${t("ev")}: ${esc(abbr(r.g.away_team_id))} $${evA.toFixed(1)} · ${esc(abbr(r.g.home_team_id))} $${evH.toFixed(1)}`;
+    };
+    el.querySelectorAll("input").forEach(i => i.addEventListener("input", upd));
+  });
+  const cal = has("model_calibration") ? tbl("model_calibration") : [];
+  chart("c-calib", { type: "bar", data: { labels: cal.map(c => c.bucket), datasets: [
+      { label: t("calibPred"), data: cal.map(c => +(c.predicted * 100).toFixed(1)), backgroundColor: css("--chalk") },
+      { label: t("calibAct"), data: cal.map(c => +(c.actual * 100).toFixed(1)), backgroundColor: css("--accent") }] },
+    options: { scales: { x: {}, y: { min: 40, max: 85, title: { display: true, text: "%" } } },
+      plugins: { tooltip: { callbacks: { afterLabel: c => `n = ${cal[c.dataIndex].games}` } } } } });
+  const fe = (has("model_features") ? tbl("model_features") : []).slice().sort((a, b) => Math.abs(b.coefficient) - Math.abs(a.coefficient));
+  chart("c-feat", { type: "bar", data: { labels: fe.map(x => featLabel(x.feature, x.label)), datasets: [{ data: fe.map(x => x.coefficient), backgroundColor: fe.map(x => x.coefficient >= 0 ? css("--win") : css("--loss")) }] },
+    options: { indexAxis: "y", plugins: { legend: { display: false } }, scales: { x: {}, y: { ticks: { autoSkip: false } } } } });
+}
+
+function calendarGames() {
+  const done = tbl("games").map(g => ({ ...g, start_utc: START.get(g.game_pk), done: true }));
+  const sch = has("schedule") ? tbl("schedule").map(g => ({ ...g, done: false })) : [];
+  return done.concat(sch);
+}
+function viewCalendar() {
+  const all = calendarGames();
+  const calSeasons = [...new Set(all.map(g => g.season))].sort((a, b) => b - a);
+  if (!S.calSeason) S.calSeason = Math.max(...(has("schedule") && tbl("schedule").length ? tbl("schedule").map(g => g.season) : calSeasons));
+  let rows = all.filter(g => g.season === S.calSeason);
+  if (S.calLeague) rows = rows.filter(g => leagueOf(g.home_team_id) === S.calLeague || leagueOf(g.away_team_id) === S.calLeague);
+  if (S.calTeam) rows = rows.filter(g => g.home_team_id === S.calTeam || g.away_team_id === S.calTeam);
+  rows.sort((a, b) => (a.start_utc || a.official_date).localeCompare(b.start_utc || b.official_date) || a.game_pk - b.game_pk);
+  const months = [...new Set(rows.map(g => g.official_date.slice(0, 7)))];
+  const todayIso = new Date().toISOString().slice(0, 10);
+  if (!months.includes(S.calMonth)) S.calMonth = (months.find(m => m >= todayIso.slice(0, 7)) || months[months.length - 1] || null);
+  const monthRows = rows.filter(g => g.official_date.slice(0, 7) === S.calMonth);
+  const byDay = new Map(); monthRows.forEach(g => { if (!byDay.has(g.official_date)) byDay.set(g.official_date, []); byDay.get(g.official_date).push(g); });
+  const monthName = m => new Date(m + "-15T12:00:00Z").toLocaleDateString(lang === "es" ? "es-DO" : "en-US", { month: "short", timeZone: "UTC" });
+  const teamOpts = `<option value="0">${t("allTeams")}</option>` + tbl("teams").filter(x => !S.calLeague || x.league_abbreviation === S.calLeague).map(x => `<option value="${x.team_id}"${x.team_id === S.calTeam ? " selected" : ""}>${esc(x.team_name)}</option>`).join("");
+  const gameRow = g => {
+    const pr = PRED.get(g.game_pk);
+    const homeWon = g.done && g.home_score > g.away_score;
+    const side = (id, won) => `<span class="side${won ? " won" : ""}">${logo(id, 26)}${esc(abbr(id))}</span>`;
+    const right = g.done ? `<span class="score">${g.away_score}–${g.home_score}</span>` : (pr ? `<span class="pill ${pr.p >= 0.5 ? "w" : "g"}">${esc(abbr(pr.p >= 0.5 ? g.home_team_id : g.away_team_id))} ${pct0(Math.max(pr.p, 1 - pr.p))}</span>` : "");
+    const check = g.done && pr && pr.correct != null ? `<span class="pill ${pr.correct ? "w" : "l"}" title="${t("pick")}">${pr.correct ? "✓" : "✗"}</span>` : "";
+    const sub = [g.venue_name ? esc(g.venue_name) : "", g.series_description && g.season_type === "Postseason" ? `<span class="chip">${esc(g.series_description)}</span>` : "",
+      !g.done ? `${t("starter")}: ${esc(g.away_probable_pitcher || t("tbd"))} vs ${esc(g.home_probable_pitcher || t("tbd"))}` : (g.winning_pitcher_id ? `W: ${esc(pname(g.winning_pitcher_id))}` : ""),
+      leagueOf(g.home_team_id) !== leagueOf(g.away_team_id) ? `<span class="chip">${t("interleague")}</span>` : ""].filter(Boolean).join("<span>·</span>");
+    return `<div class="game"><span class="tm">${fmtTime(g.start_utc) || "—"}</span><div class="mu">${side(g.away_team_id, g.done && !homeWon)}<span class="note">@</span>${side(g.home_team_id, homeWon)}</div><div class="right">${right}${check}</div><div class="sub">${sub}</div></div>`;
+  };
+  let oppPanel = "";
+  if (S.calTeam) {
+    const opp = new Map();
+    rows.forEach(g => { const home = g.home_team_id === S.calTeam, o = home ? g.away_team_id : g.home_team_id;
+      const x = opp.get(o) || { o, n: 0, h: 0, a: 0, first: g.official_date }; x.n++; home ? x.h++ : x.a++; opp.set(o, x); });
+    const list = [...opp.values()].sort((a, b) => b.n - a.n);
+    const hg = rows.filter(g => g.home_team_id === S.calTeam).length;
+    oppPanel = `<div class="panel"><h3>${t("nextOpp")} · ${esc((TEAMS.get(S.calTeam) || {}).team_name || "")} · ${S.calSeason}</h3>
+      <div class="kv" style="margin-bottom:8px"><span>${t("games2")}: <b>${rows.length}</b></span><span>${t("homeG")}: <b>${hg}</b></span><span>${t("awayG")}: <b>${rows.length - hg}</b></span><span>${t("interleague")}: <b>${rows.filter(g => leagueOf(g.home_team_id) !== leagueOf(g.away_team_id)).length}</b></span></div>
+      <div class="tall">${table([{ h: t("opp"), l: 1, cls: () => "name", v: x => tcell(x.o) }, { h: t("games2"), v: x => x.n }, { h: t("homeG"), v: x => x.h }, { h: t("awayG"), v: x => x.a }, { h: t("firstMeet"), v: x => x.first }], list)}</div></div>`;
+  }
+  view(`
+    <section class="hero"><div class="meta"><h2>${t("calendar")} · ${S.calSeason}</h2><p class="lede">${t("calLede")}</p></div>
+      <div class="pick"><label for="f-calseason" class="note">${t("season2")}</label><select id="f-calseason">${calSeasons.map(y => `<option${y === S.calSeason ? " selected" : ""}>${y}</option>`).join("")}</select>
+        <label for="f-calteam" class="note">${t("team")}</label><select id="f-calteam">${teamOpts}</select></div></section>
+    <div class="row"><span class="note">${t("league2")}</span><div class="seg" id="seg-league">${[["", t("allLeagues")], ["AL", "AL"], ["NL", "NL"]].map(([k, l]) => `<button type="button" data-k="${k}" aria-pressed="${S.calLeague === k}">${l}</button>`).join("")}</div></div>
+    <div class="row"><span class="note">${t("month")}</span><div class="seg" id="seg-month">${months.map(m => `<button type="button" data-k="${m}" aria-pressed="${m === S.calMonth}">${esc(monthName(m))}</button>`).join("")}</div></div>
+    ${oppPanel}
+    <div class="panel">${byDay.size ? [...byDay.entries()].map(([d, gs]) => `<div class="day"><h4>${esc(fmtDay(d))} <span class="note">· ${gs.length} ${t("games2").toLowerCase()}</span></h4>${gs.map(gameRow).join("")}</div>`).join("") : `<p class="empty">${t("calNone")}</p>`}</div>`);
+  document.getElementById("f-calseason").onchange = e => { S.calSeason = Number(e.target.value); S.calMonth = null; render(); };
+  document.getElementById("f-calteam").onchange = e => { S.calTeam = Number(e.target.value); render(); };
+  document.querySelectorAll("#seg-league button").forEach(b => b.onclick = () => { S.calLeague = b.dataset.k; if (S.calTeam && S.calLeague && leagueOf(S.calTeam) !== S.calLeague) S.calTeam = 0; render(); });
+  document.querySelectorAll("#seg-month button").forEach(b => b.onclick = () => { S.calMonth = b.dataset.k; render(); });
+}
+
 // ---------- shell ----------
 function view(html) { killCharts(); document.getElementById("view").innerHTML = html; wireImages(); }
 function bindRows(fn) { document.querySelectorAll("#view tr.click").forEach(tr => tr.onclick = () => fn(tr.dataset.k)); }
@@ -568,7 +768,7 @@ function render() {
   document.getElementById("tabs").innerHTML = TABS.map(k => `<a href="#${HASH[k] || k}" data-tab="${k}"${k === tab ? ' aria-current="page"' : ""}>${t(k)}</a>`).join("");
   document.querySelectorAll("#tabs a").forEach(a => a.onclick = e => { e.preventDefault(); go(a.dataset.tab); });
   document.getElementById("foot").textContent = t("foot");
-  ({ league: viewLeague, team: viewTeam, player: viewPlayer, h2h: viewH2H, leaders: viewLeaders, dr: viewDR, quality: viewQuality })[tab]();
+  ({ league: viewLeague, team: viewTeam, player: viewPlayer, h2h: viewH2H, leaders: viewLeaders, dr: viewDR, forecast: viewForecast, calendar: viewCalendar, quality: viewQuality })[tab]();
 }
 document.getElementById("f-season").onchange = e => { S.season = Number(e.target.value); render(); };
 document.getElementById("f-type").onchange = e => { S.type = e.target.value; render(); };

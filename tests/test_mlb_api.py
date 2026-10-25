@@ -58,3 +58,9 @@ def test_land_response_writes_parseable_envelope(tmp_path):
 
 def test_chunked():
     assert API.chunked(list(range(5)), 2) == [[0, 1], [2, 3], [4]]
+
+
+def test_month_chunks_align_to_calendar_months():
+    chunks = API.month_chunks(date(2026, 11, 1), date(2027, 2, 10))
+    assert chunks == [(date(2026, 11, 1), date(2026, 11, 30)), (date(2026, 12, 1), date(2026, 12, 31)),
+                      (date(2027, 1, 1), date(2027, 1, 31)), (date(2027, 2, 1), date(2027, 2, 10))]

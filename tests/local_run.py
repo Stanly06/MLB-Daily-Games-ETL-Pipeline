@@ -39,6 +39,8 @@ PIPELINE = [
     "gold/02_Gold_Player_Metrics",
     "gold/03_Gold_Dominican_Players",
     "gold/04_Gold_Semantic_Layer",
+    "gold/05_Gold_Game_Features",
+    "ml/01_Win_Probability_Model",
     "quality/01_Data_Quality_Checks",
     "exports/01_Web_Platform_Export",
 ]

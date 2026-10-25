@@ -80,7 +80,7 @@ def schedule_call(start: date, end: date, game_types: Iterable[str]) -> dict:
             "startDate": f"{start:%Y-%m-%d}",
             "endDate": f"{end:%Y-%m-%d}",
             "gameType": ",".join(game_types),
-            "hydrate": "linescore,decisions",
+            "hydrate": "linescore,decisions,probablePitcher",
         },
     }
 
@@ -117,6 +117,18 @@ def date_chunks(start: date, end: date, days: int = 31) -> list[tuple[date, date
     chunks, cur = [], start
     while cur <= end:
         stop = min(cur + timedelta(days=days - 1), end)
+        chunks.append((cur, stop))
+        cur = stop + timedelta(days=1)
+    return chunks
+
+
+def month_chunks(start: date, end: date) -> list[tuple[date, date]]:
+    """Calendar-month windows (first one starts at `start`). Full months keep the same request key
+    from day to day, so an unchanged month is recognized by its hash and not landed again."""
+    chunks, cur = [], start
+    while cur <= end:
+        nxt = date(cur.year + (cur.month == 12), cur.month % 12 + 1, 1)
+        stop = min(nxt - timedelta(days=1), end)
         chunks.append((cur, stop))
         cur = stop + timedelta(days=1)
     return chunks

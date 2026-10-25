@@ -64,6 +64,10 @@ resources:
         default: 'false'
       - name: full_refresh
         default: 'false'
+      - name: future_days
+        default: '400'
+      - name: test_season
+        default: ''
       tasks:
       - task_key: extract_mlb_api
         description: Download schedule, boxscores, players, teams, venues and standings from the MLB Stats API into the append-only
@@ -150,6 +154,24 @@ resources:
         depends_on:
         - task_key: gold_team_metrics
         - task_key: gold_dominican_players
+      - task_key: gold_game_features
+        description: Point-in-time pre-game features per game
+        notebook_task:
+          notebook_path: ../src/gold/05_Gold_Game_Features.ipynb
+        max_retries: 1
+        min_retry_interval_millis: 60000
+        timeout_seconds: 1800
+        depends_on:
+        - task_key: gold_semantic_layer
+      - task_key: ml_win_probability
+        description: Train, evaluate and score the win-probability model
+        notebook_task:
+          notebook_path: ../src/ml/01_Win_Probability_Model.ipynb
+        max_retries: 1
+        min_retry_interval_millis: 60000
+        timeout_seconds: 1800
+        depends_on:
+        - task_key: gold_game_features
       - task_key: data_quality
         description: Completeness, uniqueness, validity, internal reconciliation and reconciliation with official MLB standings;
           fails the run on any CRITICAL check
@@ -170,3 +192,4 @@ resources:
         timeout_seconds: 1200
         depends_on:
         - task_key: data_quality
+        - task_key: ml_win_probability

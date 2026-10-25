@@ -78,6 +78,13 @@ def merge_upsert(spark: SparkSession, df: DataFrame, target: str, keys: list[str
         return n
     if n == 0:
         return 0
+    # Additive schema evolution: new source columns are added to the target before the MERGE,
+    # so a new field (e.g. probable pitchers) never requires rebuilding the table.
+    existing = {f.name.lower() for f in spark.table(target).schema.fields}
+    new_cols = [f for f in df.schema.fields if f.name.lower() not in existing]
+    if new_cols:
+        cols = ", ".join(f"{f.name} {f.dataType.simpleString()}" for f in new_cols)
+        spark.sql(f"ALTER TABLE {target} ADD COLUMNS ({cols})")
     view = f"_src_{uuid.uuid4().hex[:8]}"
     df.createOrReplaceTempView(view)
     on = " AND ".join(f"t.{k} <=> s.{k}" for k in keys)
