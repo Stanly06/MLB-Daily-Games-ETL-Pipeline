@@ -37,12 +37,17 @@ def api(method, path, body=None, query=None, allow_missing=False, soft=False):
             raw = r.read()
             return json.loads(raw) if raw else {}
     except urllib.error.HTTPError as e:
-        if (allow_missing and e.code == 404) or soft:
+        body = e.read().decode()[:500]
+        if allow_missing and e.code == 404:
             return None
-        sys.exit(f"::error::{method} {path} -> HTTP {e.code}: {e.read().decode()[:500]}")
+        if soft:
+            print(f"::warning::{method} {path} -> HTTP {e.code}: {body}")
+            return None
+        sys.exit(f"::error::{method} {path} -> HTTP {e.code}: {body}")
 
 
 def main():
+    git_failed = False
     me = api("GET", "/api/2.0/preview/scim/v2/Me")["userName"]
     folder = f"/Users/{me}/{FOLDER_NAME}"
     print(f"Workspace user: {me}\nGit folder: {folder}")
@@ -50,13 +55,18 @@ def main():
     # 1. Git folder -> latest main (create it if it does not exist yet)
     # Git folders are reported as REPO or DIRECTORY depending on the workspace; their object_id is the repo id
     status = api("GET", "/api/2.0/workspace/get-status", query={"path": folder}, allow_missing=True)
+    print(f"Folder status: {status}")
     updated = api("PATCH", f"/api/2.0/repos/{status['object_id']}", {"branch": "main"}, soft=True) if status else None
     if updated is None:
         repo = api("POST", "/api/2.0/repos", {"url": REPO_URL, "provider": "gitHub", "path": folder}, soft=bool(status))
-        if repo is None:
-            sys.exit(f"::error::{folder} exists but could not be used as a Git folder")
-        updated = api("PATCH", f"/api/2.0/repos/{repo['id']}", {"branch": "main"})
-    print(f"Git folder on main @ {updated.get('head_commit_id', '?')[:7]}")
+        if repo is not None:
+            updated = api("PATCH", f"/api/2.0/repos/{repo['id']}", {"branch": "main"}, soft=True)
+    if updated:
+        print(f"Git folder on main @ {updated.get('head_commit_id', '?')[:7]}")
+    else:
+        # Keep going: the jobs still run from the code already in the Git folder; report the problem at the end
+        print(f"::error::Could not pull {folder} to the latest main (see the warnings above); jobs keep using the code already there")
+        git_failed = True
 
     # 2. Jobs from the repository definition
     def notebook(rel):
@@ -141,6 +151,9 @@ def main():
                 break
         else:
             sys.exit(f"::error::Run {run_id} did not finish in 30 minutes")
+    if git_failed:
+        sys.exit(1)
+
 
 if __name__ == "__main__":
     main()
