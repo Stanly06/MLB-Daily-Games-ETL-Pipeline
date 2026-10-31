@@ -101,10 +101,13 @@ def main():
 
     # 3. Latest runs of the daily job
     runs = api("GET", "/api/2.2/jobs/runs/list", query={"job_id": ids[daily["name"]], "limit": 5}).get("runs", [])
+    job = api("GET", "/api/2.2/jobs/get", query={"job_id": ids[daily["name"]]})
+    print(f"Schedule: {job.get('settings', {}).get('schedule')}")
     for r in runs:
         st = r.get("state", {})
         params = {p["name"]: p.get("value") for p in r.get("job_parameters", []) if p.get("name") == "mode"}
-        print(f"run {r['run_id']} · {st.get('life_cycle_state')} · {st.get('result_state', '-')} · mode={params.get('mode', 'daily')} · {r.get('run_page_url', '')}")
+        started = time.strftime("%Y-%m-%d %H:%M UTC", time.gmtime(r.get("start_time", 0) / 1000))
+        print(f"run {r['run_id']} · {started} · {st.get('life_cycle_state')} · {st.get('result_state', '-')} · mode={params.get('mode', 'daily')}")
     if not runs:
         print("No runs yet.")
 
