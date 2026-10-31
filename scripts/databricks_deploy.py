@@ -28,6 +28,10 @@ FOLDER_NAME = os.environ.get("MLB_GIT_FOLDER_NAME", "MLB-Daily-Games-ETL-Pipelin
 ROOT = Path(__file__).resolve().parents[1]
 
 
+LAST_ERROR = {"code": None, "body": ""}
+TEMPORARY = ("RESOURCE_EXHAUSTED", "FEATURE_DISABLED", "TEMPORARILY_UNAVAILABLE")
+
+
 def api(method, path, body=None, query=None, allow_missing=False, soft=False):
     url = f"{HOST}{path}" + (f"?{urllib.parse.urlencode(query)}" if query else "")
     req = urllib.request.Request(url, method=method, data=json.dumps(body).encode() if body is not None else None,
@@ -38,6 +42,7 @@ def api(method, path, body=None, query=None, allow_missing=False, soft=False):
             return json.loads(raw) if raw else {}
     except urllib.error.HTTPError as e:
         body = e.read().decode()[:500]
+        LAST_ERROR.update(code=e.code, body=body)
         if allow_missing and e.code == 404:
             return None
         if soft:
@@ -65,8 +70,12 @@ def main():
         print(f"Git folder on main @ {updated.get('head_commit_id', '?')[:7]}")
     else:
         # Keep going: the jobs still run from the code already in the Git folder; report the problem at the end
-        print(f"::error::Could not pull {folder} to the latest main (see the warnings above); jobs keep using the code already there")
-        git_failed = True
+        if any(k in LAST_ERROR["body"] for k in TEMPORARY):
+            # Databricks Free Edition limits: the workspace is temporarily blocked; it recovers by itself
+            print(f"::warning::Databricks is temporarily limiting this workspace; {folder} will be synced on the next run")
+        else:
+            print(f"::error::Could not pull {folder} to the latest main (see the warnings above); jobs keep using the code already there")
+            git_failed = True
 
     # 2. Jobs from the repository definition
     def notebook(rel):
@@ -142,7 +151,13 @@ def main():
     if only:
         if active:
             sys.exit(f"::error::A run is in progress ({active[0]['run_id']}); not starting {only}")
-        run_id = api("POST", "/api/2.2/jobs/run-now", {"job_id": ids[daily["name"]], "only": only})["run_id"]
+        started = api("POST", "/api/2.2/jobs/run-now", {"job_id": ids[daily["name"]], "only": only}, soft=True)
+        if not started:
+            if any(k in LAST_ERROR["body"] for k in TEMPORARY):
+                print(f"::warning::Databricks is temporarily not starting runs; {only} will run with the next daily job")
+                return
+            sys.exit(f"::error::Could not start {only}")
+        run_id = started["run_id"]
         print(f"\nStarted {only}: {HOST}/jobs/{ids[daily['name']]}/runs/{run_id}")
         for _ in range(90):  # up to 30 minutes
             time.sleep(20)
