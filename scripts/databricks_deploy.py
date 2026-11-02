@@ -82,6 +82,13 @@ def main():
         return f"{folder}/src/{rel}"
 
     daily = json.loads((ROOT / "resources/jobs/mlb_performance_daily.job.json").read_text())
+    # Off-season (no regular-season or postseason games, 5 Nov - 14 Mar): run weekly on Mondays instead of daily,
+    # to stay well inside the Databricks Free Edition usage quota. The job still picks up anything new (transactions,
+    # schedule changes) and the next season's calendar.
+    today = time.gmtime()
+    if today.tm_mon in (11, 12, 1, 2) and not (today.tm_mon == 11 and today.tm_mday < 5) or (today.tm_mon == 3 and today.tm_mday < 15):
+        daily["schedule"]["quartz_cron_expression"] = "0 7 6 ? * MON"
+        print("Off-season: daily job scheduled weekly (Mondays 06:07)")
     for t in daily["tasks"]:
         t["notebook_task"]["notebook_path"] = notebook(t["notebook_task"]["notebook_path"].split("/src/", 1)[1])
     daily["email_notifications"] = {"on_failure": [me], "on_duration_warning_threshold_exceeded": [me],
