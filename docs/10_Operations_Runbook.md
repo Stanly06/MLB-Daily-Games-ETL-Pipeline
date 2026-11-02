@@ -15,6 +15,9 @@ something fails.
 | 06:07 | Daily job, 13 tasks: yesterday's games + 3 days of lookback, upcoming calendar, Silver, Gold, model, quality, export | Databricks Lakeflow Jobs |
 | 07:41, 09:41, 11:41, 14:41, 18:41 | Download the export, validate it, rebuild and publish the page if the data changed | GitHub Actions `refresh-mlb-platform.yml` |
 
+**Off-season (5 Nov – 14 Mar):** there are no games, so the deploy script schedules the job weekly (Mondays 06:07)
+instead of daily, to stay inside the Databricks Free Edition usage quota. The page accepts data up to 8 days old.
+
 GitHub schedules are best-effort (they can be late or skipped); the several refresh attempts make the daily
 publication reliable. A run without new data publishes nothing.
 
@@ -45,6 +48,7 @@ publication reliable. A run without new data publishes nothing.
 | Historical reload | Job → **Run now with different parameters**: `mode=backfill`, `seasons=2024,2025,2026` (already-landed files are skipped) |
 | Rebuild Silver from Bronze | Same, with `full_refresh=true` |
 | New season | Add it to the `seasons` parameter for the backfill; the daily mode follows the calendar automatically |
+| Databricks answers `RESOURCE_EXHAUSTED` (429) or "Triggering new runs … is currently disabled temporarily" | The Free Edition usage quota was exceeded: compute is off for the rest of the day, or longer in extreme cases. Nothing to fix in the code; the job resumes by itself. Check the banner in the workspace and avoid manual re-runs meanwhile |
 | GitHub secret expired | Create a new token in Databricks (**Settings → Developer → Access tokens**) and replace `DATABRICKS_TOKEN` in the portfolio repository (**Settings → Secrets and variables → Actions**) |
 
 ## 5. First-time deployment
